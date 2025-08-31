@@ -1,11 +1,11 @@
 # Project: bin2nlp-ui
 
 ## Current Status
-- **Phase:** Project Foundation - ADR Complete
-- **Last Session:** 2025-08-31 - Created comprehensive ADR with Redux Toolkit architecture for multi-provider LLM integration
-- **Next Steps:** Create Feature PRDs for core features using @0xcc/instruct/003_create-feature-prd.md
-- **Active Document:** 000_PADR|bin2nlp-frontend.md (completed)
-- **Current Feature:** Foundation phase complete - ready for feature development planning
+- **Phase:** Technical Implementation Documents (TID Creation)
+- **Last Session:** 2025-08-31 - Completed massive documentation-API alignment task (123+ tasks), all 4 Feature PRDs and TDDs created
+- **Next Steps:** Create Technical Implementation Documents (TIDs) for all 4 features using @0xcc/instruct/005_create-tid.md
+- **Active Document:** Ready to create 001_FTID|file-management-system.md (Analysis Job Management System)
+- **Current Feature:** Need to create TIDs for all 4 core features before moving to TASK generation
 
 ## Quick Resume Commands
 ```bash
@@ -77,10 +77,12 @@ ls -la 0xcc/*/
 - **Security First:** HTTPS/WSS only, no sensitive data persistence, input validation, CSP implementation
 
 ## Implementation Notes
-- **Multi-Provider LLM Architecture:** Centralized provider coordination through Redux Toolkit with cost tracking and fallback strategies
-- **Real-time Updates:** WebSocket integration with RTK Query cache invalidation for live progress tracking
+- **Job-Based Architecture:** Single `/api/v1/decompile` endpoint for submission, status, and results - zero backend changes required
+- **Real-time Updates:** REST polling at 1-2 second intervals with RTK Query smart polling and cache invalidation
+- **Multi-Provider LLM Strategy:** User-managed API keys with session-only storage, provider discovery via `/api/v1/llm-providers`
 - **Component Library:** Material-UI with custom theming, selective imports for bundle optimization
-- **API Integration:** OpenAPI spec consumption for type generation, RTK Query for caching and state management
+- **API Integration:** OpenAPI spec consumption for type generation, RTK Query for caching and polling management
+- **State Management:** Domain-driven structure with co-located components, single `analysisSlice` for job management
 - **Environment Configuration:** Environment variables for deployment flexibility, Docker multi-stage builds for optimization
 
 ## AI Dev Tasks Framework Workflow
@@ -112,15 +114,26 @@ ls -la 0xcc/*/
 ### Project Level Documents
 - ✅ 0xcc/prds/000_PPRD|bin2nlp-frontend.md (Project PRD)
 - ✅ 0xcc/adrs/000_PADR|bin2nlp-frontend.md (Architecture Decision Record)
+- ✅ 0xcc/docs/api-integration-guide.md (API Reference Guide)
+- ✅ 0xcc/tasks/005_FTASKS|documentation-api-alignment.md (COMPLETED - 123+ alignment tasks)
 
-### Feature Documents
-*[Add as features are identified and developed]*
-
-**Example format:**
-- ❌ 0xcc/prds/001_FPRD|Feature_A.md (Feature PRD)
-- ❌ 0xcc/tdds/001_FTDD|Feature_A.md (Technical Design Doc)
-- ❌ 0xcc/tids/001_FTID|Feature_A.md (Technical Implementation Doc)
-- ❌ 0xcc/tasks/001_FTASKS|Feature_A.md (Task List)
+### Feature Documents (Job-Based Architecture)
+- ✅ 0xcc/prds/001_FPRD|file-management-system.md (Analysis Job Management System PRD)
+- ✅ 0xcc/prds/002_FPRD|two-phase-pipeline-interface.md (Analysis Configuration Interface PRD) 
+- ✅ 0xcc/prds/003_FPRD|results-exploration-platform.md (Results Exploration Platform PRD)
+- ✅ 0xcc/prds/004_FPRD|multi-provider-llm-integration.md (Multi-Provider LLM Integration PRD)
+- ✅ 0xcc/tdds/001_FTDD|file-management-system.md (Analysis Job Management System TDD)
+- ✅ 0xcc/tdds/002_FTDD|two-phase-pipeline-interface.md (Analysis Configuration Interface TDD)
+- ✅ 0xcc/tdds/003_FTDD|results-exploration-platform.md (Results Exploration Platform TDD)
+- ✅ 0xcc/tdds/004_FTDD|multi-provider-llm-integration.md (Multi-Provider LLM Integration TDD)
+- ❌ 0xcc/tids/001_FTID|file-management-system.md (Analysis Job Management System TID) - NEXT
+- ❌ 0xcc/tids/002_FTID|two-phase-pipeline-interface.md (Analysis Configuration Interface TID)
+- ❌ 0xcc/tids/003_FTID|results-exploration-platform.md (Results Exploration Platform TID)
+- ❌ 0xcc/tids/004_FTID|multi-provider-llm-integration.md (Multi-Provider LLM Integration TID)
+- ❌ 0xcc/tasks/001_FTASKS|file-management-system.md (Analysis Job Management System Tasks)
+- ❌ 0xcc/tasks/002_FTASKS|two-phase-pipeline-interface.md (Analysis Configuration Interface Tasks)
+- ❌ 0xcc/tasks/003_FTASKS|results-exploration-platform.md (Results Exploration Platform Tasks)
+- ❌ 0xcc/tasks/004_FTASKS|multi-provider-llm-integration.md (Multi-Provider LLM Integration Tasks)
 
 ### Status Indicators
 - ✅ **Complete:** Document finished and reviewed
@@ -272,12 +285,17 @@ After each development session, update:
 ## Feature Priority Order
 *[Will be populated from Project PRD]*
 
-**From bin2nlp-frontend Project PRD:**
-1. Multi-Provider LLM Integration (Core/MVP)
-2. Binary File Processing Pipeline (Core/MVP)
-3. Real-time Processing Interface (Core/MVP)
-4. Results Management & Export (Important)
-5. Advanced Analytics Dashboard (Future)
+**From bin2nlp-frontend Project PRD (Job-Based Architecture):**
+1. Analysis Job Management System (Core/MVP) - Single endpoint job submission, tracking, cancellation
+2. Analysis Configuration Interface (Core/MVP) - Decompilation settings + LLM provider selection
+3. Results Exploration Platform (Core/MVP) - Interactive results viewing from completed jobs
+4. Multi-Provider LLM Integration (Core/MVP) - Provider discovery + user credential management
+
+**Implementation Priority (TID Creation Order):**
+1. Analysis Job Management System (Foundation for all other features)
+2. Analysis Configuration Interface (Job submission requirements)
+3. Multi-Provider LLM Integration (Credential management for jobs)
+4. Results Exploration Platform (Results display for completed jobs)
 
 ## Session History Log
 
@@ -286,6 +304,19 @@ After each development session, update:
 - **Next:** Create Feature PRDs for core features using @0xcc/instruct/003_create-feature-prd.md
 - **Files Created:** 000_PPRD|bin2nlp-frontend.md, 000_PADR|bin2nlp-frontend.md, CLAUDE.md with project standards
 - **Duration:** Foundation phase complete
+
+### Sessions 2-4: 2025-08-31 - Feature Development Complete
+- **Accomplished:** Created all 4 Feature PRDs and all 4 Technical Design Documents (TDDs)
+- **Major Discovery:** API analysis revealed job-based architecture, not separate endpoints as initially assumed
+- **Correction Task:** Completed massive 123+ task documentation-API alignment project
+- **Files Created:** All 4 Feature PRDs, all 4 Feature TDDs, API integration guide, alignment task documentation
+- **Architecture Locked:** React 18 + TypeScript, MUI, Redux Toolkit + RTK Query, domain-driven structure, co-located components, smart REST polling
+- **Duration:** Feature analysis and alignment complete
+
+### Current Session: 2025-08-31 - TID Creation Phase
+- **Status:** Ready to create Technical Implementation Documents (TIDs) for all 4 features
+- **Next:** Start with 001_FTID|file-management-system.md (Analysis Job Management System)
+- **Implementation Decisions Locked:** Tech stack finalized, API integration patterns established, zero backend changes confirmed
 
 *[Add new sessions as they occur]*
 
