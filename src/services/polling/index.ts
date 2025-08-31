@@ -1,2 +1,2 @@
-// REST polling management services
-// Examples: JobPollingService with intelligent polling strategies
+export { pollingManager } from './pollingManager';
+export type { PollingManager, PollingConfig, JobPollingState } from './pollingManager';

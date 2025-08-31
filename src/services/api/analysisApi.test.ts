@@ -85,8 +85,8 @@ describe('analysisApi - Real API Integration', () => {
       } else {
         // If successful, should return job ID
         expect(result.data).toBeDefined();
-        expect(result.data?.jobId).toBeDefined();
-        console.log('✓ Real API job submission successful, jobId:', result.data?.jobId);
+        expect(result.data?.job_id).toBeDefined();
+        console.log('✓ Real API job submission successful, job_id:', result.data?.job_id);
       }
     });
   });

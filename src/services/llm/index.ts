@@ -1,2 +1,7 @@
-// LLM provider abstractions
-// Examples: Provider discovery, credential management, model selection
+export { llmProviderManager } from './providerManager';
+export type { 
+  LLMProviderManager, 
+  ProviderCredentials, 
+  ProviderHealthStatus, 
+  CostEstimate 
+} from './providerManager';
