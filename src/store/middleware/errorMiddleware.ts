@@ -11,10 +11,10 @@ export const errorMiddleware: Middleware = (_api: MiddlewareAPI) => next => acti
 
     // Log API errors with context
     console.error('API Error:', {
-      endpoint: (meta?.arg as any)?.endpointName || 'unknown',
-      status: (error as any)?.status,
-      message: (error as any)?.data?.message || error?.message,
-      originalArgs: (meta?.arg as any)?.originalArgs,
+      endpoint: (meta?.arg as { endpointName?: string })?.endpointName || 'unknown',
+      status: (error as { status?: unknown })?.status,
+      message: (error as { data?: { message?: string }; message?: string })?.data?.message || (error as Error)?.message,
+      originalArgs: (meta?.arg as { originalArgs?: unknown })?.originalArgs,
     });
 
     // You could dispatch a global error action here

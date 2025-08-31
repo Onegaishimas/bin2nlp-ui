@@ -65,6 +65,6 @@ export const analysisPersistConfig = {
 };
 
 // Helper function to create persisted reducer
-export const createPersistedAnalysisReducer = (reducer: any) => {
+export const createPersistedAnalysisReducer = (reducer: unknown) => {
   return persistReducer(analysisPersistConfig, reducer);
 };

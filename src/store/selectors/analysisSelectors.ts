@@ -6,7 +6,7 @@
 import { createSelector } from '@reduxjs/toolkit';
 import type { RootState } from '../index';
 import type { AnalysisState } from '../slices/analysisSlice';
-import type { AnalysisJob, JobStatusType, JobPhaseType } from '../../types/analysis.types';
+import type { JobStatusType, JobPhaseType } from '../../types/analysis.types';
 
 // Helper to safely access analysis state (handles PersistPartial)
 const getAnalysisState = (state: RootState): AnalysisState => state.analysis as unknown as AnalysisState;

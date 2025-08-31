@@ -68,7 +68,7 @@ export interface LLMProvider {
 export interface ApiError {
   message: string;
   code?: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
   timestamp?: string;
 }
 
@@ -77,7 +77,7 @@ const baseQueryWithRetry = retry(
   fetchBaseQuery({
     baseUrl: `${config.apiBaseUrl}/api/v1`,
     timeout: 30000, // 30 seconds timeout
-    prepareHeaders: (headers, { getState, endpoint }) => {
+    prepareHeaders: (headers, { endpoint }) => {
       // Remove default Content-Type for FormData requests
       if (endpoint !== 'submitJob') {
         headers.set('Content-Type', 'application/json');
@@ -131,7 +131,7 @@ const baseQueryWithRetry = retry(
   }) as BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError>,
   {
     maxRetries: 3,
-    backoff: async (attempt, maxRetries) => {
+    backoff: async (attempt) => {
       // Exponential backoff: 1s, 2s, 4s
       const delay = Math.min(1000 * Math.pow(2, attempt), 10000);
       await new Promise(resolve => setTimeout(resolve, delay));

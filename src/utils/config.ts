@@ -15,8 +15,8 @@ export interface AppConfig {
  */
 const getEnvVar = (key: string, fallback: string): string => {
   // Browser environment
-  if (typeof window !== 'undefined' && (window as any).import?.meta?.env) {
-    return (window as any).import.meta.env[key] || fallback;
+  if (typeof window !== 'undefined' && (window as { import?: { meta?: { env?: Record<string, string> } } }).import?.meta?.env) {
+    return (window as { import?: { meta?: { env?: Record<string, string> } } }).import.meta.env[key] || fallback;
   }
   // Node.js environment (for tests)
   return process.env[key] || fallback;

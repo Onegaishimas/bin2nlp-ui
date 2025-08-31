@@ -437,12 +437,9 @@ class FileUploadService {
    * Clean up completed/cancelled uploads
    */
   public cleanup(): void {
-    const now = Date.now();
-    const fiveMinutesAgo = now - (5 * 60 * 1000);
-
     this.activeUploads.forEach((progress, fileId) => {
       if (['completed', 'cancelled', 'error'].includes(progress.status)) {
-        // Remove uploads that finished more than 5 minutes ago
+        // Remove uploads that finished
         // Note: This is a simple cleanup - in real implementation you'd track completion time
         this.activeUploads.delete(fileId);
       }

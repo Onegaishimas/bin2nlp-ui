@@ -3,8 +3,7 @@
  */
 
 import type { RootState } from '../index';
-import type { AnalysisState } from '../slices/analysisSlice';
-import type { AnalysisJob, JobStatusType, JobPhaseType } from '../../types/analysis.types';
+import type { AnalysisJob, JobStatusType } from '../../types/analysis.types';
 import {
   selectActiveJobs,
   selectActiveJobsArray,

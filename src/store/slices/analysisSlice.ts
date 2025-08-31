@@ -3,8 +3,6 @@ import type {
   AnalysisJob,
   AnalysisUIState,
   PollingState,
-  JobStatusType,
-  JobPhaseType,
 } from '../../types/analysis.types';
 
 export interface AnalysisState {

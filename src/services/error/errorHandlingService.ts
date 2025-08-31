@@ -14,7 +14,7 @@ export interface ErrorContext {
   timestamp: string;
   userAgent?: string;
   url?: string;
-  additionalData?: Record<string, any>;
+  additionalData?: Record<string, unknown>;
 }
 
 export interface ProcessedError {
@@ -47,7 +47,7 @@ export interface ErrorReport {
     timestamp: string;
     category: string;
     message: string;
-    data?: Record<string, any>;
+    data?: Record<string, unknown>;
   }>;
 }
 
@@ -62,7 +62,7 @@ class ErrorHandlingService {
    * Process any error into a user-friendly format
    */
   public processError(
-    error: Error | FetchBaseQueryError | ApiError | any,
+    error: Error | FetchBaseQueryError | ApiError | unknown,
     context?: Partial<ErrorContext>
   ): ProcessedError {
     const errorId = this.generateErrorId();
@@ -262,7 +262,7 @@ class ErrorHandlingService {
   /**
    * Log error for debugging and analytics
    */
-  private logError(processedError: ProcessedError, originalError: any): void {
+  private logError(processedError: ProcessedError, originalError: unknown): void {
     const report: ErrorReport = {
       errorId: processedError.id,
       timestamp: new Date().toISOString(),
@@ -287,7 +287,9 @@ class ErrorHandlingService {
       const logMethod = report.level === 'fatal' || report.level === 'error' ? 'error' : 
                        report.level === 'warn' ? 'warn' : 'info';
       
-      console[logMethod](`[${report.level.toUpperCase()}] ${report.message}`, {
+      const consoleMethod = logMethod === 'error' ? console.error : 
+                        logMethod === 'warn' ? console.warn : console.info;
+      consoleMethod(`[${report.level.toUpperCase()}] ${report.message}`, {
         errorId: report.errorId,
         error: originalError,
         context: report.context,
@@ -298,7 +300,7 @@ class ErrorHandlingService {
   /**
    * Add breadcrumb for error context
    */
-  public addBreadcrumb(category: string, message: string, data?: Record<string, any>): void {
+  public addBreadcrumb(category: string, message: string, data?: Record<string, unknown>): void {
     this.breadcrumbs.push({
       timestamp: new Date().toISOString(),
       category,
@@ -332,7 +334,7 @@ class ErrorHandlingService {
   /**
    * Check if error is a network connectivity issue
    */
-  public isNetworkError(error: any): boolean {
+  public isNetworkError(error: unknown): boolean {
     const processed = this.processError(error);
     return processed.type === 'network';
   }
@@ -340,7 +342,7 @@ class ErrorHandlingService {
   /**
    * Check if error is retryable
    */
-  public isRetryable(error: any): boolean {
+  public isRetryable(error: unknown): boolean {
     const processed = this.processError(error);
     return processed.canRetry;
   }
@@ -361,7 +363,7 @@ class ErrorHandlingService {
   /**
    * Check if error is RTK Query FetchBaseQueryError
    */
-  private isFetchBaseQueryError(error: any): error is FetchBaseQueryError {
+  private isFetchBaseQueryError(error: unknown): error is FetchBaseQueryError {
     return error && typeof error === 'object' && 'status' in error;
   }
 
@@ -402,13 +404,8 @@ class ErrorHandlingService {
     recentErrorRate: number; // errors per hour in last 24 hours
   } {
     const now = Date.now();
-    const oneDayAgo = now - (24 * 60 * 60 * 1000);
     const oneHourAgo = now - (60 * 60 * 1000);
 
-    const recentErrors = this.errorLog.filter(log => 
-      new Date(log.timestamp).getTime() > oneDayAgo
-    );
-    
     const veryRecentErrors = this.errorLog.filter(log => 
       new Date(log.timestamp).getTime() > oneHourAgo
     );

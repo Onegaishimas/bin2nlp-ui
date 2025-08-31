@@ -208,7 +208,7 @@ class PollingManager {
   /**
    * Handle successful polling response
    */
-  private handleSuccessfulPoll(jobId: string, result: any): void {
+  private handleSuccessfulPoll(jobId: string, result: unknown): void {
     const pollingState = this.pollingJobs.get(jobId);
     if (!pollingState) return;
 
@@ -246,7 +246,7 @@ class PollingManager {
   /**
    * Handle polling errors with exponential backoff
    */
-  private handlePollingError(jobId: string, error: any): void {
+  private handlePollingError(jobId: string, error: unknown): void {
     const pollingState = this.pollingJobs.get(jobId);
     if (!pollingState) return;
 
