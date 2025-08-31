@@ -1,6 +1,14 @@
-# XCC Framework
+# bin2nlp-ui
 
-## Quick Setup: From Template to Your Project
+A React TypeScript frontend for binary-to-natural-language processing with multi-provider LLM integration.
+
+## Project Overview
+
+This application provides a user-friendly interface for processing binary files and converting them to natural language descriptions using various LLM providers. Built with React 18, TypeScript, and Material-UI, featuring Redux Toolkit for state management and real-time processing capabilities.
+
+## XCC Framework Integration
+
+This project uses the XCC (Extended Context & Collaboration) Framework for structured development and documentation.
 
 ### Prerequisites
 - Git installed
@@ -35,63 +43,52 @@ Automated session management and context preservation:
 
 ## Step-by-Step Setup
 
-### 1. Clone the Template
+### 1. Clone the Project
 ```bash
-git clone https://github.com/Onegaishimas/xcc_lattice.git
+git clone https://github.com/Onegaishimas/bin2nlp-ui.git
+cd bin2nlp-ui
 ```
 
-### 2. Remove Template Git History
+### 2. Install Dependencies
 ```bash
-rm -rf xcc_lattice/.git
+npm install
 ```
 
-### 3. Rename to Your Project
+### 3. Environment Setup
 ```bash
-mv xcc_lattice your-project-name
-cd your-project-name
+# Copy environment template
+cp .env.example .env.local
+
+# Edit .env.local with your API keys
+# VITE_OPENAI_API_KEY=your_openai_key
+# VITE_ANTHROPIC_API_KEY=your_anthropic_key
+# VITE_COHERE_API_KEY=your_cohere_key
 ```
 
-### 4. Initialize XCC Framework
+### 4. Development Server
 ```bash
-# Create complete 0xcc framework structure
-mkdir -p 0xcc/adrs 0xcc/docs 0xcc/instruct 0xcc/prds 0xcc/tasks 0xcc/tdds 0xcc/tids
-mkdir -p 0xcc/transcripts 0xcc/checkpoints 0xcc/scripts
-
-# Initialize session state
-echo '{"sessionNumber": 0, "currentPhase": "setup", "totalSessionTime": "0 hours"}' > 0xcc/session_state.json
-
-# Initialize research context
-echo '{"projectContext": {}, "researchHistory": [], "researchPatterns": {}}' > 0xcc/research_context.json
-
-# Optional: Add transcripts to .gitignore if you want to keep them private
-echo "0xcc/transcripts/" >> .gitignore
+npm run dev
 ```
 
-### 5. Create New GitHub Repository
-1. Go to [github.com](https://github.com)
-2. Click **"+"** → **"New repository"**
-3. Repository name: `your-project-name`
-4. Set to **Public** or **Private**
-5. **DO NOT** check "Add a README file"
-6. Click **"Create repository"**
+The application will be available at `http://localhost:5173`
 
-### 6. Initialize New Git Repository
-```bash
-git init
-git add .
-git commit -m "Initial commit: XCC Framework with 0xcc organization"
-git branch -M main
-```
+## Technology Stack
 
-### 7. Connect to GitHub and Push
-```bash
-git remote add origin https://github.com/yourusername/your-project-name.git
-git push -u origin main
-```
+- **Frontend:** React 18 + TypeScript + Vite
+- **UI Library:** Material-UI (MUI) v5
+- **State Management:** Redux Toolkit with RTK Query
+- **Build Tools:** Vite with TypeScript strict mode
+- **Testing:** Jest + React Testing Library + Playwright
+- **Deployment:** Docker with nginx reverse proxy
+- **LLM Integration:** Multi-provider support (OpenAI, Anthropic, Cohere)
 
-**Authentication:** GitHub will prompt for:
-- **Username:** `yourusername`
-- **Password:** Use your Personal Access Token (not your GitHub password)
+## Key Features
+
+- **Multi-Provider LLM Integration:** Support for OpenAI, Anthropic, and Cohere APIs
+- **Binary File Processing:** Advanced binary analysis and conversion pipeline
+- **Real-time Processing:** Live progress tracking with WebSocket integration
+- **Results Management:** Export capabilities and processing history
+- **Advanced Analytics:** Performance metrics and usage analytics dashboard
 
 ---
 
@@ -140,16 +137,17 @@ code .
 - Type: **"Claude Code: Start Chat"**
 - Or use the Claude Code icon in the Activity Bar
 
-### 3. Initialize XCC Framework Context
+### 3. Load Project Context
 ```bash
 # In Claude Code chat:
 @CLAUDE.md
 
-@0xcc/instruct/001_create-project-prd.md
+# Load current project documents
+@0xcc/prds/000_PPRD|bin2nlp-frontend.md
+@0xcc/adrs/000_PADR|bin2nlp-frontend.md
 
-I want to build [describe your project idea in detail]
-
-# The framework will guide you through strategic questions with research options
+# Start feature development
+@0xcc/instruct/003_create-feature-prd.md
 ```
 
 ### 4. Using Research Integration
@@ -204,65 +202,41 @@ Select this option to get:
 
 ## Workflow Process
 
-### Phase 1: Project Foundation
+### Phase 1: Project Foundation (Complete)
 ```bash
-# Session 1: Project Vision with Research Support
-@0xcc/instruct/001_create-project-prd.md
-# Use research options to inform project scope and user decisions
-# Output: 0xcc/prds/000_PPRD|[project-name].md
+# ✅ Session 1: Project Vision - COMPLETED
+# Output: 0xcc/prds/000_PPRD|bin2nlp-frontend.md
 
-# Session 2: Technical Foundation with Research
-@0xcc/instruct/002_create-adr.md
-@0xcc/prds/000_PPRD|[project-name].md
-# Research technology choices before making architectural decisions
-# Output: 0xcc/adrs/000_PADR|[project-name].md
-# Action: Copy Project Standards section to CLAUDE.md
+# ✅ Session 2: Technical Foundation - COMPLETED
+# Output: 0xcc/adrs/000_PADR|bin2nlp-frontend.md
+# Action: Project Standards copied to CLAUDE.md
 ```
 
-### Phase 2: Feature Development (For each feature)
+### Phase 2: Feature Development (Current Phase)
 ```bash
-# Feature Requirements with Research Support
+# Next: Feature Requirements for Multi-Provider LLM Integration
 @0xcc/instruct/003_create-feature-prd.md
-@0xcc/prds/000_PPRD|[project-name].md
-@0xcc/adrs/000_PADR|[project-name].md
-# Research feature patterns, user stories, and security requirements
-# Output: 0xcc/prds/[###]_FPRD|[feature-name].md
+@0xcc/prds/000_PPRD|bin2nlp-frontend.md
+@0xcc/adrs/000_PADR|bin2nlp-frontend.md
+# Output: 0xcc/prds/001_FPRD|multi-provider-llm-integration.md
 
-# Technical Design with Architecture Research
-@0xcc/instruct/004_create-tdd.md  
-@0xcc/prds/[###]_FPRD|[feature-name].md
-# Research architecture patterns, data design, and component organization
-# Output: 0xcc/tdds/[###]_FTDD|[feature-name].md
-
-# Implementation Planning with Best Practices Research
-@0xcc/instruct/005_create-tid.md
-@0xcc/prds/[###]_FPRD|[feature-name].md
-@0xcc/tdds/[###]_FTDD|[feature-name].md
-# Research implementation patterns, coding standards, and optimization strategies
-# Output: 0xcc/tids/[###]_FTID|[feature-name].md
-
-# Task Generation with Planning Research
-@0xcc/instruct/006_generate-tasks.md
-@0xcc/prds/[###]_FPRD|[feature-name].md
-# Optional: Reference TDD and TID for enhanced context
-# Output: 0xcc/tasks/[###]_FTASKS|[feature-name].md
-
-# Implementation with Progress Tracking
-@0xcc/instruct/007_process-task-list.md
-@0xcc/tasks/[###]_FTASKS|[feature-name].md
-# Execute tasks with automatic progress tracking and checkpointing
+# Remaining features:
+# - Binary File Processing Pipeline
+# - Real-time Processing Interface  
+# - Results Management & Export
+# - Advanced Analytics Dashboard
 ```
 
 ---
 
 ## What You Get
 
-### XCC Lattice Project Structure
+### bin2nlp-ui Project Structure
 ```
-your-project-name/
+bin2nlp-ui/
 ├── 0xcc/                           # Core XCC Framework
 │   ├── adrs/                       # Architecture Decision Records
-│   │   └── 000_PADR|Project_Name.md
+│   │   └── 000_PADR|bin2nlp-frontend.md
 │   ├── docs/                       # Additional framework documentation
 │   ├── instruct/                   # XCC Framework instruction files
 │   │   ├── 000_README.md
@@ -274,18 +248,18 @@ your-project-name/
 │   │   ├── 006_generate-tasks.md
 │   │   └── 007_process-task-list.md
 │   ├── prds/                       # Product Requirements Documents
-│   │   ├── 000_PPRD|Project_Name.md
-│   │   ├── 001_FPRD|Feature_A.md
-│   │   └── 002_FPRD|Feature_B.md
+│   │   ├── 000_PPRD|bin2nlp-frontend.md
+│   │   ├── 001_FPRD|multi-provider-llm.md
+│   │   └── 002_FPRD|binary-file-processing.md
 │   ├── tasks/                      # Task Lists with progress tracking
-│   │   ├── 001_FTASKS|Feature_A.md
-│   │   └── 002_FTASKS|Feature_B.md
+│   │   ├── 001_FTASKS|multi-provider-llm.md
+│   │   └── 002_FTASKS|binary-file-processing.md
 │   ├── tdds/                       # Technical Design Documents
-│   │   ├── 001_FTDD|Feature_A.md
-│   │   └── 002_FTDD|Feature_B.md
+│   │   ├── 001_FTDD|multi-provider-llm.md
+│   │   └── 002_FTDD|binary-file-processing.md
 │   ├── tids/                       # Technical Implementation Documents
-│   │   ├── 001_FTID|Feature_A.md
-│   │   └── 002_FTID|Feature_B.md
+│   │   ├── 001_FTID|multi-provider-llm.md
+│   │   └── 002_FTID|binary-file-processing.md
 │   ├── transcripts/                # Session transcripts for learning
 │   │   ├── session_001.md
 │   │   └── research_log.md
