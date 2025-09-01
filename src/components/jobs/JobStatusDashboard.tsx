@@ -11,8 +11,8 @@ import {
   IconButton,
   Alert,
   Divider,
-  Grid,
 } from '@mui/material';
+import { GridLegacy as Grid } from '@mui/material';
 import {
   Refresh as RefreshIcon,
   Cancel as CancelIcon,
@@ -24,7 +24,12 @@ import {
 } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { useGetJobStatusQuery, useCancelJobMutation } from '../../services/api/analysisApi';
-import { selectActiveJobs, selectActiveJobsCount } from '../../store/selectors/analysisSelectors';
+import { 
+  selectActiveJobs, 
+  selectActiveJobsCount, 
+  selectJobHistory,
+  selectHasJobHistory 
+} from '../../store/selectors/analysisSelectors';
 
 interface JobStatusCardProps {
   jobId: string;
@@ -32,26 +37,30 @@ interface JobStatusCardProps {
   onViewResults?: (jobId: string) => void;
 }
 
-const JobStatusCard: React.FC<JobStatusCardProps> = ({ 
-  jobId, 
-  onCancel, 
-  onViewResults 
-}) => {
-  const { 
-    data: jobStatus, 
-    error, 
+const JobStatusCard: React.FC<JobStatusCardProps> = ({ jobId, onCancel, onViewResults }) => {
+  const {
+    data: jobStatus,
+    error,
     isLoading,
-    refetch 
+    refetch,
   } = useGetJobStatusQuery(jobId, {
-    pollingInterval: jobStatus?.isActive ? 2000 : 0, // Poll every 2 seconds for active jobs
+    pollingInterval: 2000, // Poll every 2 seconds - will be managed by component logic
     skipPollingIfUnfocused: true,
   });
+
+  // Skip polling for completed jobs by conditionally refetching
+  React.useEffect(() => {
+    if (jobStatus?.status === 'completed' || jobStatus?.status === 'failed' || jobStatus?.status === 'cancelled') {
+      // Stop polling for completed jobs - RTK Query will handle this automatically
+      return;
+    }
+  }, [jobStatus?.status]);
 
   const [cancelJob, { isLoading: isCancelling }] = useCancelJobMutation();
 
   const handleCancel = async () => {
     if (!jobStatus?.isActive) return;
-    
+
     try {
       await cancelJob(jobId).unwrap();
       onCancel?.(jobId);
@@ -63,15 +72,15 @@ const JobStatusCard: React.FC<JobStatusCardProps> = ({
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'queued':
-        return <QueuedIcon color="info" />;
+        return <QueuedIcon color='info' />;
       case 'processing':
-        return <ProcessingIcon color="primary" />;
+        return <ProcessingIcon color='primary' />;
       case 'completed':
-        return <CompleteIcon color="success" />;
+        return <CompleteIcon color='success' />;
       case 'failed':
-        return <ErrorIcon color="error" />;
+        return <ErrorIcon color='error' />;
       case 'cancelled':
-        return <CancelIcon color="warning" />;
+        return <CancelIcon color='warning' />;
       default:
         return <QueuedIcon />;
     }
@@ -105,7 +114,7 @@ const JobStatusCard: React.FC<JobStatusCardProps> = ({
     return (
       <Card>
         <CardContent>
-          <Alert severity="error">
+          <Alert severity='error'>
             Failed to load job status: {(error as { message?: string })?.message || 'Unknown error'}
           </Alert>
         </CardContent>
@@ -118,7 +127,7 @@ const JobStatusCard: React.FC<JobStatusCardProps> = ({
       <Card>
         <CardContent>
           <LinearProgress />
-          <Typography variant="body2" sx={{ mt: 1 }}>
+          <Typography variant='body2' sx={{ mt: 1 }}>
             Loading job status...
           </Typography>
         </CardContent>
@@ -130,9 +139,7 @@ const JobStatusCard: React.FC<JobStatusCardProps> = ({
     return (
       <Card>
         <CardContent>
-          <Alert severity="warning">
-            Job not found or has been removed.
-          </Alert>
+          <Alert severity='warning'>Job not found or has been removed.</Alert>
         </CardContent>
       </Card>
     );
@@ -144,13 +151,21 @@ const JobStatusCard: React.FC<JobStatusCardProps> = ({
         avatar={getStatusIcon(jobStatus.status)}
         title={
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="h6" component="span">
+            <Typography variant='h6' component='span'>
               Job {jobId.slice(0, 8)}...
             </Typography>
             <Chip
-              size="small"
+              size='small'
               label={jobStatus.status.toUpperCase()}
-              color={getStatusColor(jobStatus.status) as 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning'}
+              color={
+                getStatusColor(jobStatus.status) as
+                  | 'primary'
+                  | 'secondary'
+                  | 'error'
+                  | 'info'
+                  | 'success'
+                  | 'warning'
+              }
             />
           </Box>
         }
@@ -160,20 +175,13 @@ const JobStatusCard: React.FC<JobStatusCardProps> = ({
             <IconButton onClick={() => refetch()} disabled={isLoading}>
               <RefreshIcon />
             </IconButton>
-            {jobStatus.isActive && (
-              <IconButton 
-                onClick={handleCancel}
-                disabled={isCancelling}
-                color="error"
-              >
+            {jobStatus.isActive && jobStatus.status !== 'completed' && jobStatus.status !== 'failed' && jobStatus.status !== 'cancelled' && (
+              <IconButton onClick={handleCancel} disabled={isCancelling} color='error'>
                 <CancelIcon />
               </IconButton>
             )}
             {jobStatus.status === 'completed' && onViewResults && (
-              <IconButton 
-                onClick={() => onViewResults(jobId)}
-                color="primary"
-              >
+              <IconButton onClick={() => onViewResults(jobId)} color='primary'>
                 <DownloadIcon />
               </IconButton>
             )}
@@ -185,38 +193,44 @@ const JobStatusCard: React.FC<JobStatusCardProps> = ({
           {/* Progress */}
           <Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant='body2' color='text.secondary'>
                 Progress
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant='body2' color='text.secondary'>
                 {jobStatus.progress_percentage.toFixed(1)}%
               </Typography>
             </Box>
-            <LinearProgress 
-              variant="determinate" 
+            <LinearProgress
+              variant='determinate'
               value={jobStatus.progress_percentage}
-              color={getStatusColor(jobStatus.status) as 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning'}
+              color={
+                getStatusColor(jobStatus.status) as
+                  | 'primary'
+                  | 'secondary'
+                  | 'error'
+                  | 'info'
+                  | 'success'
+                  | 'warning'
+              }
             />
           </Box>
 
           {/* Current Stage */}
           <Box>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
+            <Typography variant='body2' color='text.secondary' gutterBottom>
               Current Stage
             </Typography>
-            <Typography variant="body1">
+            <Typography variant='body1'>
               {jobStatus.current_stage || 'Waiting to start...'}
             </Typography>
           </Box>
 
           {/* Worker Info */}
           <Box>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
+            <Typography variant='body2' color='text.secondary' gutterBottom>
               Worker
             </Typography>
-            <Typography variant="body1">
-              {jobStatus.worker_id}
-            </Typography>
+            <Typography variant='body1'>{jobStatus.worker_id}</Typography>
           </Box>
 
           {/* Results Summary (if completed) */}
@@ -224,28 +238,29 @@ const JobStatusCard: React.FC<JobStatusCardProps> = ({
             <>
               <Divider />
               <Box>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
+                <Typography variant='body2' color='text.secondary' gutterBottom>
                   Results Summary
                 </Typography>
                 <Grid container spacing={2}>
                   <Grid item xs={6}>
-                    <Typography variant="body2">
+                    <Typography variant='body2'>
                       Functions: <strong>{jobStatus.results.function_count}</strong>
                     </Typography>
                   </Grid>
                   <Grid item xs={6}>
-                    <Typography variant="body2">
+                    <Typography variant='body2'>
                       Imports: <strong>{jobStatus.results.import_count}</strong>
                     </Typography>
                   </Grid>
                   <Grid item xs={6}>
-                    <Typography variant="body2">
+                    <Typography variant='body2'>
                       Strings: <strong>{jobStatus.results.string_count}</strong>
                     </Typography>
                   </Grid>
                   <Grid item xs={6}>
-                    <Typography variant="body2">
-                      Duration: <strong>{formatDuration(jobStatus.results.duration_seconds)}</strong>
+                    <Typography variant='body2'>
+                      Duration:{' '}
+                      <strong>{formatDuration(jobStatus.results.duration_seconds)}</strong>
                     </Typography>
                   </Grid>
                 </Grid>
@@ -265,9 +280,15 @@ const JobStatusCard: React.FC<JobStatusCardProps> = ({
   );
 };
 
-export const JobStatusDashboard: React.FC = () => {
+interface JobStatusDashboardProps {
+  onViewResults?: (jobId: string) => void;
+}
+
+export const JobStatusDashboard: React.FC<JobStatusDashboardProps> = ({ onViewResults }) => {
   const activeJobs = useSelector(selectActiveJobs);
   const activeJobCount = useSelector(selectActiveJobsCount);
+  const jobHistory = useSelector(selectJobHistory);
+  const hasJobHistory = useSelector(selectHasJobHistory);
 
   const handleCancelJob = (jobId: string) => {
     console.info(`Job ${jobId} cancelled`);
@@ -276,39 +297,52 @@ export const JobStatusDashboard: React.FC = () => {
 
   const handleViewResults = (jobId: string) => {
     console.info(`Viewing results for job ${jobId}`);
-    // Navigate to results page - will be implemented with routing
+    onViewResults?.(jobId);
   };
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
+      <Typography variant='h4' gutterBottom>
         Job Status Dashboard
       </Typography>
-      
-      <Typography variant="body1" color="text.secondary" paragraph>
+
+      <Typography variant='body1' color='text.secondary' paragraph>
         Monitor your analysis jobs in real-time. Active jobs update automatically every 2 seconds.
       </Typography>
 
-      {activeJobCount === 0 ? (
-        <Alert severity="info">
-          No active jobs. Upload a binary file to start analysis.
-        </Alert>
-      ) : (
-        <Stack spacing={2}>
-          <Typography variant="h6">
-            Active Jobs ({activeJobCount})
-          </Typography>
-          
-          {Object.entries(activeJobs).map(([jobId]) => (
-            <JobStatusCard
-              key={jobId}
-              jobId={jobId}
-              onCancel={handleCancelJob}
-              onViewResults={handleViewResults}
-            />
-          ))}
-        </Stack>
-      )}
+      <Stack spacing={3}>
+        {/* Active Jobs Section */}
+        {activeJobCount === 0 ? (
+          <Alert severity='info'>No active jobs. Upload a binary file to start analysis.</Alert>
+        ) : (
+          <Stack spacing={2}>
+            <Typography variant='h6'>Active Jobs ({activeJobCount})</Typography>
+            {Object.entries(activeJobs).map(([jobId]) => (
+              <JobStatusCard
+                key={jobId}
+                jobId={jobId}
+                onCancel={handleCancelJob}
+                {...(onViewResults && { onViewResults: handleViewResults })}
+              />
+            ))}
+          </Stack>
+        )}
+
+        {/* Job History Section */}
+        {hasJobHistory && (
+          <Stack spacing={2}>
+            <Typography variant='h6'>Job History ({jobHistory.length})</Typography>
+            {jobHistory.map((job) => (
+              <JobStatusCard
+                key={job.id}
+                jobId={job.id}
+                onCancel={handleCancelJob}
+                {...(onViewResults && { onViewResults: handleViewResults })}
+              />
+            ))}
+          </Stack>
+        )}
+      </Stack>
     </Box>
   );
 };
