@@ -1,5 +1,5 @@
 // Re-export all common types for easy importing
-export type { AnalysisJob, AnalysisState } from '../store/slices/analysisSlice';
+export type { AnalysisState } from '../store/slices/analysisSlice';
 export type {
   JobSubmissionRequest,
   JobSubmissionResponse,

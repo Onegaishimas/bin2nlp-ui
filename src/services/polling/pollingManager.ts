@@ -5,7 +5,13 @@
 
 import { store } from '../../store';
 import { analysisApi } from '../api/analysisApi';
-import { startPolling, stopPolling, addJobToPolling, removeJobFromPolling } from '../../store/slices/analysisSlice';
+import type { JobStatusResponse } from '../api/analysisApi';
+import {
+  startPolling,
+  stopPolling,
+  addJobToPolling,
+  removeJobFromPolling,
+} from '../../store/slices/analysisSlice';
 
 export interface PollingConfig {
   minInterval: number;
@@ -26,10 +32,10 @@ export interface JobPollingState {
 
 class PollingManager {
   private config: PollingConfig = {
-    minInterval: 1000,     // 1 second minimum
-    maxInterval: 30000,    // 30 seconds maximum
+    minInterval: 1000, // 1 second minimum
+    maxInterval: 30000, // 30 seconds maximum
     backoffMultiplier: 1.5, // Gradual backoff
-    maxRetries: 5,         // Max retries before giving up
+    maxRetries: 5, // Max retries before giving up
     pauseOnInactive: true, // Pause when tab is inactive
   };
 
@@ -61,10 +67,10 @@ class PollingManager {
     };
 
     this.pollingJobs.set(jobId, pollingState);
-    
+
     // Update Redux state
     store.dispatch(addJobToPolling(jobId));
-    
+
     this.scheduleNextPoll(jobId);
   }
 
@@ -79,7 +85,7 @@ class PollingManager {
     }
 
     this.pollingJobs.delete(jobId);
-    
+
     // Update Redux state
     store.dispatch(removeJobFromPolling(jobId));
   }
@@ -90,7 +96,7 @@ class PollingManager {
   public startBatchPolling(jobIds: string[]): void {
     // Update Redux state first
     store.dispatch(startPolling({ jobIds }));
-    
+
     jobIds.forEach(jobId => this.startJobPolling(jobId));
   }
 
@@ -101,10 +107,10 @@ class PollingManager {
     // Clear all timers
     this.timers.forEach(timer => clearTimeout(timer));
     this.timers.clear();
-    
+
     // Clear polling states
     this.pollingJobs.clear();
-    
+
     // Update Redux state
     store.dispatch(stopPolling());
   }
@@ -125,7 +131,7 @@ class PollingManager {
     if (this.globalPauseCount > 0) {
       this.globalPauseCount--;
     }
-    
+
     if (this.globalPauseCount === 0) {
       // Resume polling for active jobs
       this.pollingJobs.forEach((state, jobId) => {
@@ -147,7 +153,7 @@ class PollingManager {
   } {
     const activeJobs = Array.from(this.pollingJobs.keys());
     const nextPollTimes: Record<string, number> = {};
-    
+
     this.pollingJobs.forEach((state, jobId) => {
       nextPollTimes[jobId] = state.lastPollTime + state.currentInterval;
     });
@@ -192,13 +198,12 @@ class PollingManager {
 
     try {
       // Trigger RTK Query fetch
-      const result = await store.dispatch(
-        analysisApi.endpoints.getJobStatus.initiate(jobId, { forceRefetch: true })
-      ).unwrap();
+      const result = await store
+        .dispatch(analysisApi.endpoints.getJobStatus.initiate(jobId, { forceRefetch: true }))
+        .unwrap();
 
       // Handle successful response
       this.handleSuccessfulPoll(jobId, result);
-
     } catch (error) {
       // Handle polling error
       this.handlePollingError(jobId, error);
@@ -208,14 +213,14 @@ class PollingManager {
   /**
    * Handle successful polling response
    */
-  private handleSuccessfulPoll(jobId: string, result: unknown): void {
+  private handleSuccessfulPoll(jobId: string, result: JobStatusResponse): void {
     const pollingState = this.pollingJobs.get(jobId);
     if (!pollingState) return;
 
     // Reset retry count on success
     pollingState.retryCount = 0;
     pollingState.lastPollTime = Date.now();
-    pollingState.error = undefined;
+    delete pollingState.error;
 
     // Check if job is completed
     if (result.isCompleted) {
@@ -225,7 +230,7 @@ class PollingManager {
     }
 
     // Adjust polling interval based on job progress
-    if (result.progress > 50) {
+    if (result.progress_percentage > 50) {
       // Job is progressing well, poll more frequently
       pollingState.currentInterval = Math.max(
         this.config.minInterval,
@@ -251,11 +256,15 @@ class PollingManager {
     if (!pollingState) return;
 
     pollingState.retryCount++;
-    pollingState.error = error.message || 'Polling failed';
+    pollingState.error =
+      (error instanceof Error ? error.message : String(error)) || 'Polling failed';
 
     // Check if max retries exceeded
     if (pollingState.retryCount >= this.config.maxRetries) {
-      console.warn(`Polling failed for job ${jobId} after ${this.config.maxRetries} retries:`, error);
+      console.warn(
+        `Polling failed for job ${jobId} after ${this.config.maxRetries} retries:`,
+        error
+      );
       this.stopJobPolling(jobId);
       return;
     }
@@ -277,7 +286,7 @@ class PollingManager {
     if (typeof document !== 'undefined') {
       document.addEventListener('visibilitychange', () => {
         this.isTabActive = !document.hidden;
-        
+
         if (this.isTabActive) {
           // Tab became active, resume polling
           this.resumeAll();
@@ -328,10 +337,9 @@ class PollingManager {
   } {
     const jobs = Array.from(this.pollingJobs.values());
     const totalRetries = jobs.reduce((sum, job) => sum + job.retryCount, 0);
-    const averageInterval = jobs.length > 0 
-      ? jobs.reduce((sum, job) => sum + job.currentInterval, 0) / jobs.length
-      : 0;
-    
+    const averageInterval =
+      jobs.length > 0 ? jobs.reduce((sum, job) => sum + job.currentInterval, 0) / jobs.length : 0;
+
     const errors: Record<string, string> = {};
     jobs.forEach(job => {
       if (job.error) {

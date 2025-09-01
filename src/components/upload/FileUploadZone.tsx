@@ -1,14 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import {
-  Box,
-  Paper,
-  Typography,
-  Button,
-  LinearProgress,
-  Alert,
-  Chip,
-  Stack,
-} from '@mui/material';
+import { Box, Paper, Typography, Button, LinearProgress, Alert, Chip, Stack } from '@mui/material';
 import {
   CloudUpload as UploadIcon,
   InsertDriveFile as FileIcon,
@@ -49,35 +40,46 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
     }
   }, []);
 
-  const handleFileValidation = useCallback((file: File) => {
-    const result = fileUploadService.validateFile(file);
-    setValidationResult(result);
+  const handleFileValidation = useCallback(
+    (file: File) => {
+      const result = fileUploadService.validateFile(file);
+      setValidationResult(result);
 
-    if (result.isValid) {
-      onFileSelect(file);
-    }
-  }, [onFileSelect]);
+      if (result.isValid) {
+        onFileSelect(file);
+      }
+    },
+    [onFileSelect]
+  );
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setDragActive(false);
 
-    if (disabled || e.dataTransfer.files.length === 0) return;
+      if (disabled || e.dataTransfer.files.length === 0) return;
 
-    const file = e.dataTransfer.files[0];
-    handleFileValidation(file);
-  }, [disabled, handleFileValidation]);
+      const file = e.dataTransfer.files[0];
+      if (!file) return;
+      handleFileValidation(file);
+    },
+    [disabled, handleFileValidation]
+  );
 
-  const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    if (disabled || !e.target.files || e.target.files.length === 0) return;
+  const handleFileInput = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (disabled || !e.target.files || e.target.files.length === 0) return;
 
-    const file = e.target.files[0];
-    handleFileValidation(file);
-    
-    // Reset input value to allow selecting same file again
-    e.target.value = '';
-  }, [disabled, handleFileValidation]);
+      const file = e.target.files[0];
+      if (!file) return;
+      handleFileValidation(file);
+
+      // Reset input value to allow selecting same file again
+      e.target.value = '';
+    },
+    [disabled, handleFileValidation]
+  );
 
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
@@ -89,11 +91,16 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
 
   const getUploadStatusColor = (status: UploadProgress['status']) => {
     switch (status) {
-      case 'uploading': return 'primary';
-      case 'completed': return 'success';
-      case 'error': return 'error';
-      case 'cancelled': return 'warning';
-      default: return 'default';
+      case 'uploading':
+        return 'primary';
+      case 'completed':
+        return 'success';
+      case 'error':
+        return 'error';
+      case 'cancelled':
+        return 'warning';
+      default:
+        return 'default';
     }
   };
 
@@ -119,9 +126,9 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
         onClick={() => !disabled && document.getElementById('file-input')?.click()}
       >
         <input
-          id="file-input"
-          type="file"
-          accept=".exe,.dll,.bin,.elf,.so,.dylib,.jar"
+          id='file-input'
+          type='file'
+          accept='.exe,.dll,.bin,.elf,.so,.dylib,.jar'
           style={{ display: 'none' }}
           onChange={handleFileInput}
           disabled={disabled}
@@ -130,52 +137,50 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
         {!selectedFile ? (
           <Box>
             <UploadIcon sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
-            <Typography variant="h6" gutterBottom>
+            <Typography variant='h6' gutterBottom>
               Drop your binary file here
             </Typography>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
+            <Typography variant='body2' color='text.secondary' gutterBottom>
               or click to browse files
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant='caption' color='text.secondary'>
               Supported formats: {SUPPORTED_FORMATS.join(', ')} • Max size: {MAX_FILE_SIZE}
             </Typography>
           </Box>
         ) : (
           <Box>
             <FileIcon sx={{ fontSize: 48, color: 'success.main', mb: 2 }} />
-            <Typography variant="h6" gutterBottom>
+            <Typography variant='h6' gutterBottom>
               {selectedFile.name}
             </Typography>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
+            <Typography variant='body2' color='text.secondary' gutterBottom>
               {formatFileSize(selectedFile.size)}
             </Typography>
-            
+
             {uploadProgress && (
               <Box sx={{ mt: 2, mb: 2 }}>
-                <Stack direction="row" spacing={1} justifyContent="center" alignItems="center">
+                <Stack direction='row' spacing={1} justifyContent='center' alignItems='center'>
                   <Chip
-                    size="small"
+                    size='small'
                     label={uploadProgress.status}
                     color={getUploadStatusColor(uploadProgress.status)}
-                    icon={uploadProgress.status === 'completed' ? <SuccessIcon /> : undefined}
+                    {...(uploadProgress.status === 'completed' && { icon: <SuccessIcon /> })}
                   />
-                  <Typography variant="caption">
-                    {uploadProgress.percentComplete}%
-                  </Typography>
+                  <Typography variant='caption'>{uploadProgress.progress}%</Typography>
                 </Stack>
                 <LinearProgress
-                  variant="determinate"
-                  value={uploadProgress.percentComplete}
+                  variant='determinate'
+                  value={uploadProgress.progress}
                   sx={{ mt: 1 }}
                 />
               </Box>
             )}
-            
+
             <Button
-              variant="outlined"
-              color="error"
-              size="small"
-              onClick={(e) => {
+              variant='outlined'
+              color='error'
+              size='small'
+              onClick={e => {
                 e.stopPropagation();
                 onFileRemove();
                 setValidationResult(null);
@@ -190,18 +195,14 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
       </Paper>
 
       {validationResult && !validationResult.isValid && (
-        <Alert 
-          severity="error" 
-          icon={<ErrorIcon />}
-          sx={{ mt: 2 }}
-        >
-          <Typography variant="body2">
+        <Alert severity='error' icon={<ErrorIcon />} sx={{ mt: 2 }}>
+          <Typography variant='body2'>
             <strong>File validation failed:</strong>
           </Typography>
           <ul style={{ margin: '4px 0', paddingLeft: '20px' }}>
             {validationResult.errors.map((error, index) => (
               <li key={index}>
-                <Typography variant="body2">{error}</Typography>
+                <Typography variant='body2'>{error}</Typography>
               </li>
             ))}
           </ul>
@@ -209,14 +210,14 @@ export const FileUploadZone: React.FC<FileUploadZoneProps> = ({
       )}
 
       {validationResult && validationResult.isValid && validationResult.warnings.length > 0 && (
-        <Alert severity="warning" sx={{ mt: 2 }}>
-          <Typography variant="body2">
+        <Alert severity='warning' sx={{ mt: 2 }}>
+          <Typography variant='body2'>
             <strong>Warnings:</strong>
           </Typography>
           <ul style={{ margin: '4px 0', paddingLeft: '20px' }}>
             {validationResult.warnings.map((warning, index) => (
               <li key={index}>
-                <Typography variant="body2">{warning}</Typography>
+                <Typography variant='body2'>{warning}</Typography>
               </li>
             ))}
           </ul>

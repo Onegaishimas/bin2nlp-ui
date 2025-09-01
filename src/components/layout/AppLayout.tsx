@@ -21,7 +21,7 @@ import {
   ViewList as JobsIcon,
   Assessment as ResultsIcon,
   Settings as SettingsIcon,
-  Health as HealthIcon,
+  MonitorHeart as HealthIcon,
   Home as HomeIcon,
 } from '@mui/icons-material';
 
@@ -29,6 +29,7 @@ const DRAWER_WIDTH = 240;
 
 interface AppLayoutProps {
   children: React.ReactNode;
+  onNavigate?: (path: string) => void;
 }
 
 interface NavigationItem {
@@ -77,7 +78,7 @@ const navigationItems: NavigationItem[] = [
   },
 ];
 
-export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
+export const AppLayout: React.FC<AppLayoutProps> = ({ children, onNavigate }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -89,16 +90,16 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const drawer = (
     <div>
       <Toolbar>
-        <Typography variant="h6" noWrap component="div">
+        <Typography variant='h6' noWrap component='div'>
           bin2nlp
         </Typography>
       </Toolbar>
       <List>
-        {navigationItems.map((item) => (
+        {navigationItems.map(item => (
           <ListItem key={item.id} disablePadding>
             <ListItemButton
               onClick={() => {
-                // Navigation logic will be implemented with routing
+                onNavigate?.(item.path);
                 if (isMobile) {
                   setMobileOpen(false);
                 }
@@ -117,7 +118,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
       <AppBar
-        position="fixed"
+        position='fixed'
         sx={{
           width: { sm: `calc(100% - ${DRAWER_WIDTH}px)` },
           ml: { sm: `${DRAWER_WIDTH}px` },
@@ -126,30 +127,27 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       >
         <Toolbar>
           <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
+            color='inherit'
+            aria-label='open drawer'
+            edge='start'
             onClick={handleDrawerToggle}
             sx={{ mr: 2, display: { sm: 'none' } }}
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+          <Typography variant='h6' noWrap component='div' sx={{ flexGrow: 1 }}>
             Binary Analysis Platform
           </Typography>
-          <Typography variant="body2" sx={{ opacity: 0.8 }}>
+          <Typography variant='body2' sx={{ opacity: 0.8 }}>
             v1.0.0
           </Typography>
         </Toolbar>
       </AppBar>
 
-      <Box
-        component="nav"
-        sx={{ width: { sm: DRAWER_WIDTH }, flexShrink: { sm: 0 } }}
-      >
+      <Box component='nav' sx={{ width: { sm: DRAWER_WIDTH }, flexShrink: { sm: 0 } }}>
         {/* Mobile drawer */}
         <Drawer
-          variant="temporary"
+          variant='temporary'
           open={mobileOpen}
           onClose={handleDrawerToggle}
           ModalProps={{
@@ -168,7 +166,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
         {/* Desktop drawer */}
         <Drawer
-          variant="permanent"
+          variant='permanent'
           sx={{
             display: { xs: 'none', sm: 'block' },
             '& .MuiDrawer-paper': {
@@ -183,7 +181,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       </Box>
 
       <Box
-        component="main"
+        component='main'
         sx={{
           flexGrow: 1,
           p: 3,

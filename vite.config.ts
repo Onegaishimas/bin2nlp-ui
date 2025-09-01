@@ -30,6 +30,8 @@ export default defineConfig(({ command: _command, mode }) => ({
     host: true,
     open: true,
     cors: true,
+    // Enable verbose logging
+    logLevel: mode === 'development' ? 'info' : 'warn',
     // API proxy for development
     ...(mode === 'development' && {
       proxy: {

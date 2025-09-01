@@ -5,8 +5,8 @@
 
 // Job status and phase enums for better type safety
 export const JobStatus = {
-  PENDING: 'pending',
-  PROCESSING: 'processing', 
+  QUEUED: 'queued',
+  PROCESSING: 'processing',
   COMPLETED: 'completed',
   FAILED: 'failed',
   CANCELLED: 'cancelled',
@@ -15,7 +15,7 @@ export const JobStatus = {
 export const JobPhase = {
   QUEUED: 'queued',
   DECOMPILING: 'decompiling',
-  TRANSLATING: 'translating', 
+  TRANSLATING: 'translating',
   COMPLETED: 'completed',
   FAILED: 'failed',
 } as const;
@@ -112,7 +112,7 @@ export interface AnalysisUIState {
   currentView: 'submission' | 'tracking' | 'history';
   selectedJobId?: string;
   submissionPanelExpanded: boolean;
-  trackingPanelExpanded: boolean;  
+  trackingPanelExpanded: boolean;
   historyPanelExpanded: boolean;
   filters: JobFilters;
 }

@@ -1,102 +1,123 @@
-import { useEffect } from 'react';
-import { Container, Typography, Box, Button, Alert, CircularProgress } from '@mui/material';
-import { useAppSelector, useAppDispatch } from '@/store';
-import { setCurrentView } from '@/store/slices/analysisSlice';
-import { useGetSystemHealthQuery } from '@/services/api/analysisApi';
-import { config } from '@/utils/config';
+import React from 'react';
+import { AppLayout } from './components/layout/AppLayout';
+import { UploadPage } from './pages/UploadPage';
+import { JobStatusDashboard } from './components/jobs/JobStatusDashboard';
+import { LLMProviderDashboard } from './components/providers/LLMProviderDashboard';
+import { SystemHealthDashboard } from './components/health/SystemHealthDashboard';
+import { ResultsViewer } from './components/results/ResultsViewer';
+import { Box, Typography, Alert, Card, CardContent } from '@mui/material';
+import { useGetSystemHealthQuery } from './services/api/analysisApi';
 
-function App() {
-  const dispatch = useAppDispatch();
-  const currentView = useAppSelector(state => state.analysis.ui.currentView);
+// Simple routing state for demo (in production you'd use React Router)
+const AppContent: React.FC = () => {
+  const [currentPage, setCurrentPage] = React.useState('dashboard');
+  const [selectedJobId, setSelectedJobId] = React.useState<string | null>(null);
 
-  // Check system health on app start
-  const {
-    data: healthData,
-    error: healthError,
-    isLoading: healthLoading,
-  } = useGetSystemHealthQuery();
+  // Check system health
+  const { data: healthData, error: healthError, isLoading } = useGetSystemHealthQuery();
 
-  const handleGetStarted = () => {
-    dispatch(setCurrentView('submission'));
+  const handleNavigate = (path: string) => {
+    const pageMap: Record<string, string> = {
+      '/': 'dashboard',
+      '/upload': 'upload',
+      '/jobs': 'jobs',
+      '/results': 'results',
+      '/providers': 'providers',
+      '/health': 'health',
+    };
+    setCurrentPage(pageMap[path] || 'dashboard');
   };
 
-  useEffect(() => {
-    // Log app initialization
-    console.info('bin2nlp UI initialized', {
-      version: __APP_VERSION__,
-      buildTime: __BUILD_TIME__,
-      apiUrl: config.apiBaseUrl,
-      environment: config.logLevel,
-    });
-  }, []);
+  const handleViewResults = (jobId: string) => {
+    setSelectedJobId(jobId);
+    setCurrentPage('results');
+  };
 
-  return (
-    <Container maxWidth='lg'>
-      <Box sx={{ py: 4 }}>
-        {/* Header */}
-        <Typography
-          variant='h1'
-          component='h1'
-          gutterBottom
-          align='center'
-          sx={{ fontSize: { xs: '2.5rem', md: '3.5rem' } }}
-        >
-          bin2nlp
-        </Typography>
-        <Typography variant='h5' component='h2' gutterBottom align='center' color='text.secondary'>
-          Binary-to-Natural-Language Processing Platform
-        </Typography>
+  const renderContent = () => {
+    switch (currentPage) {
+      case 'upload':
+        return <UploadPage />;
+      case 'jobs':
+        return <JobStatusDashboard onViewResults={handleViewResults} />;
+      case 'providers':
+        return <LLMProviderDashboard />;
+      case 'health':
+        return <SystemHealthDashboard />;
+      case 'results':
+        return selectedJobId ? (
+          <ResultsViewer jobId={selectedJobId} />
+        ) : (
+          <Box>
+            <Typography variant='h4' gutterBottom>
+              Results
+            </Typography>
+            <Typography variant='body1' color='text.secondary'>
+              Select a completed job from the Job Status dashboard to view its results.
+            </Typography>
+          </Box>
+        );
+      default:
+        return (
+          <Box>
+            <Typography variant='h4' gutterBottom>
+              Welcome to bin2nlp
+            </Typography>
+            <Typography variant='body1' color='text.secondary' paragraph>
+              Binary-to-Natural-Language Processing Platform
+            </Typography>
+            <Typography variant='body2' paragraph>
+              Upload binary files for decompilation and natural language translation using advanced
+              AI models. Support for PE, ELF, Mach-O, and JAR formats with multi-provider LLM
+              integration.
+            </Typography>
 
-        {/* System Status */}
-        <Box sx={{ mb: 4, display: 'flex', justifyContent: 'center' }}>
-          {healthLoading ? (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <CircularProgress size={20} />
-              <Typography variant='body2' color='text.secondary'>
-                Connecting to bin2nlp API...
-              </Typography>
-            </Box>
-          ) : healthError ? (
-            <Alert severity='warning' sx={{ maxWidth: 600 }}>
-              Unable to connect to bin2nlp API at {config.apiBaseUrl}. Some features may not work.
-            </Alert>
-          ) : healthData ? (
-            <Alert severity='success' sx={{ maxWidth: 600 }}>
-              Connected to bin2nlp API v{healthData.version} ({healthData.status})
-            </Alert>
-          ) : null}
-        </Box>
+            {/* System Status */}
+            <Card sx={{ mt: 3 }}>
+              <CardContent>
+                <Typography variant='h6' gutterBottom>
+                  System Status
+                </Typography>
+                {isLoading ? (
+                  <Alert severity='info'>Connecting to bin2nlp API...</Alert>
+                ) : healthError ? (
+                  <Alert severity='warning'>
+                    Unable to connect to bin2nlp API at http://localhost:8000. Please ensure the
+                    backend is running.
+                  </Alert>
+                ) : healthData ? (
+                  <Alert severity='success'>
+                    Connected to bin2nlp API v{healthData.version} ({healthData.status})
+                  </Alert>
+                ) : null}
+              </CardContent>
+            </Card>
 
-        {/* App Description */}
-        <Typography
-          variant='body1'
-          align='center'
-          color='text.secondary'
-          sx={{ mb: 4, maxWidth: 800, mx: 'auto' }}
-        >
-          Upload binary files for decompilation and natural language translation using advanced AI
-          models. Support for PE, ELF, Mach-O, and JAR formats with multi-provider LLM integration.
-        </Typography>
+            {/* Navigation Help */}
+            <Card sx={{ mt: 2 }}>
+              <CardContent>
+                <Typography variant='h6' gutterBottom>
+                  Getting Started
+                </Typography>
+                <Typography variant='body2'>
+                  • Use the <strong>Upload & Analyze</strong> section to submit binary files for
+                  analysis
+                  <br />• Monitor job progress in the <strong>Job Status</strong> dashboard
+                  <br />• View analysis results in the <strong>Results</strong> section
+                  <br />• Configure LLM providers in the <strong>LLM Providers</strong> settings
+                  <br />• Check system health in the <strong>System Health</strong> monitor
+                </Typography>
+              </CardContent>
+            </Card>
+          </Box>
+        );
+    }
+  };
 
-        {/* Debug Info */}
-        <Typography variant='body2' align='center' color='text.disabled' sx={{ mb: 2 }}>
-          Current View: {currentView} | API: {config.apiBaseUrl}
-        </Typography>
+  return <AppLayout onNavigate={handleNavigate}>{renderContent()}</AppLayout>;
+};
 
-        {/* Action Button */}
-        <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
-          <Button
-            variant='contained'
-            size='large'
-            onClick={handleGetStarted}
-            disabled={healthLoading || !!healthError}
-          >
-            {healthLoading ? 'Connecting...' : healthError ? 'API Unavailable' : 'Get Started'}
-          </Button>
-        </Box>
-      </Box>
-    </Container>
-  );
-}
+const App: React.FC = () => {
+  return <AppContent />;
+};
 
 export default App;

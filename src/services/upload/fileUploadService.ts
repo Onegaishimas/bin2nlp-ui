@@ -48,7 +48,7 @@ class FileUploadService {
       'application/java-archive',
       'application/x-elf',
       'application/x-mach-binary',
-      'application/vnd.microsoft.portable-executable'
+      'application/vnd.microsoft.portable-executable',
     ],
     chunkSize: 1024 * 1024, // 1MB chunks
     maxConcurrentUploads: 3,
@@ -79,23 +79,29 @@ class FileUploadService {
     if (file.size === 0) {
       errors.push('File is empty');
     } else if (file.size > this.config.maxFileSize) {
-      errors.push(`File size ${fileInfo.readableSize} exceeds maximum of ${this.formatFileSize(this.config.maxFileSize)}`);
+      errors.push(
+        `File size ${fileInfo.readableSize} exceeds maximum of ${this.formatFileSize(this.config.maxFileSize)}`
+      );
     }
 
     // Extension validation
     const extension = fileInfo.extension.toLowerCase();
     if (extension && !this.config.allowedExtensions.includes(extension)) {
-      errors.push(`File extension ${extension} is not supported. Allowed: ${this.config.allowedExtensions.join(', ')}`);
+      errors.push(
+        `File extension ${extension} is not supported. Allowed: ${this.config.allowedExtensions.join(', ')}`
+      );
     }
 
     // MIME type validation (if available)
     if (file.type) {
-      const isAllowedMimeType = this.config.allowedMimeTypes.some(allowed => 
-        file.type.includes(allowed) || allowed.includes(file.type)
+      const isAllowedMimeType = this.config.allowedMimeTypes.some(
+        allowed => file.type.includes(allowed) || allowed.includes(file.type)
       );
-      
+
       if (!isAllowedMimeType) {
-        warnings.push(`File type ${file.type} may not be supported. Expected binary executable files.`);
+        warnings.push(
+          `File type ${file.type} may not be supported. Expected binary executable files.`
+        );
       }
     } else {
       warnings.push('File type could not be determined. Ensure this is a binary executable file.');
@@ -137,10 +143,11 @@ class FileUploadService {
     const unique: File[] = [];
 
     newFiles.forEach(newFile => {
-      const existing = this.uploadQueue.find(existingFile => 
-        existingFile.name === newFile.name && 
-        existingFile.size === newFile.size &&
-        Math.abs(existingFile.lastModified - newFile.lastModified) < 1000
+      const existing = this.uploadQueue.find(
+        existingFile =>
+          existingFile.name === newFile.name &&
+          existingFile.size === newFile.size &&
+          Math.abs(existingFile.lastModified - newFile.lastModified) < 1000
       );
 
       if (existing) {
@@ -175,13 +182,13 @@ class FileUploadService {
     if (controller) {
       controller.abort();
       this.abortControllers.delete(fileId);
-      
+
       const progress = this.activeUploads.get(fileId);
       if (progress) {
         progress.status = 'cancelled';
         progress.error = 'Upload cancelled by user';
       }
-      
+
       return true;
     }
     return false;
@@ -192,11 +199,11 @@ class FileUploadService {
    */
   public cancelAllUploads(): number {
     let cancelled = 0;
-    
+
     this.abortControllers.forEach((controller, fileId) => {
       controller.abort();
       cancelled++;
-      
+
       const progress = this.activeUploads.get(fileId);
       if (progress) {
         progress.status = 'cancelled';
@@ -211,9 +218,16 @@ class FileUploadService {
   /**
    * Create file upload progress tracker
    */
-  public createProgressTracker(file: File, onProgress?: (progress: UploadProgress) => void): {
+  public createProgressTracker(
+    file: File,
+    onProgress?: (progress: UploadProgress) => void
+  ): {
     fileId: string;
-    updateProgress: (bytesUploaded: number, status?: UploadProgress['status'], error?: string) => void;
+    updateProgress: (
+      bytesUploaded: number,
+      status?: UploadProgress['status'],
+      error?: string
+    ) => void;
     complete: () => void;
     error: (error: string) => void;
   } {
@@ -232,7 +246,7 @@ class FileUploadService {
     this.activeUploads.set(fileId, initialProgress);
 
     const updateProgress = (
-      bytesUploaded: number, 
+      bytesUploaded: number,
       status: UploadProgress['status'] = 'uploading',
       error?: string
     ) => {
@@ -241,16 +255,20 @@ class FileUploadService {
 
       const now = Date.now();
       const elapsedTime = (now - startTime) / 1000; // seconds
-      
+
       progress.bytesUploaded = bytesUploaded;
       progress.progress = Math.round((bytesUploaded / file.size) * 100);
       progress.status = status;
-      progress.error = error;
+      if (error) {
+        progress.error = error;
+      } else {
+        delete progress.error;
+      }
 
       // Calculate upload speed
       if (elapsedTime > 0) {
         progress.uploadSpeed = Math.round(bytesUploaded / elapsedTime);
-        
+
         // Estimate remaining time
         if (progress.uploadSpeed > 0 && bytesUploaded > 0) {
           const remainingBytes = file.size - bytesUploaded;
@@ -290,7 +308,7 @@ class FileUploadService {
     const handleDragEnter = (e: DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      
+
       dragCounter++;
       if (dragCounter === 1 && onDragStateChange) {
         onDragStateChange(true);
@@ -300,7 +318,7 @@ class FileUploadService {
     const handleDragOver = (e: DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      
+
       // Set drop effect
       if (e.dataTransfer) {
         e.dataTransfer.dropEffect = 'copy';
@@ -310,7 +328,7 @@ class FileUploadService {
     const handleDragLeave = (e: DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      
+
       dragCounter--;
       if (dragCounter === 0 && onDragStateChange) {
         onDragStateChange(false);
@@ -320,7 +338,7 @@ class FileUploadService {
     const handleDrop = (e: DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      
+
       dragCounter = 0;
       if (onDragStateChange) {
         onDragStateChange(false);
@@ -361,11 +379,11 @@ class FileUploadService {
    */
   private formatFileSize(bytes: number): string {
     if (bytes === 0) return '0 B';
-    
+
     const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
     const size = bytes / Math.pow(1024, i);
-    
+
     return `${size.toFixed(i === 0 ? 0 : 1)} ${sizes[i]}`;
   }
 
@@ -386,7 +404,7 @@ class FileUploadService {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
     return Math.abs(hash).toString(36);
@@ -418,11 +436,17 @@ class FileUploadService {
   } {
     const uploads = Array.from(this.activeUploads.values());
     const totalBytesUploaded = uploads.reduce((sum, upload) => sum + upload.bytesUploaded, 0);
-    const totalBytesRemaining = uploads.reduce((sum, upload) => sum + (upload.totalBytes - upload.bytesUploaded), 0);
-    const validSpeeds = uploads.filter(u => u.uploadSpeed && u.uploadSpeed > 0).map(u => u.uploadSpeed!);
-    const averageSpeed = validSpeeds.length > 0 
-      ? validSpeeds.reduce((sum, speed) => sum + speed, 0) / validSpeeds.length 
-      : 0;
+    const totalBytesRemaining = uploads.reduce(
+      (sum, upload) => sum + (upload.totalBytes - upload.bytesUploaded),
+      0
+    );
+    const validSpeeds = uploads
+      .filter(u => u.uploadSpeed && u.uploadSpeed > 0)
+      .map(u => u.uploadSpeed!);
+    const averageSpeed =
+      validSpeeds.length > 0
+        ? validSpeeds.reduce((sum, speed) => sum + speed, 0) / validSpeeds.length
+        : 0;
 
     return {
       activeUploads: uploads.length,

@@ -1,9 +1,5 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import type { 
-  AnalysisJob,
-  AnalysisUIState,
-  PollingState,
-} from '../../types/analysis.types';
+import type { AnalysisJob, AnalysisUIState, PollingState } from '../../types/analysis.types';
 
 export interface AnalysisState {
   // Active jobs being processed or monitored
@@ -20,7 +16,7 @@ export interface AnalysisState {
 
   // Global loading and error states
   isLoading: boolean;
-  error: string | undefined;
+  error?: string;
 }
 
 const initialState: AnalysisState = {
@@ -28,7 +24,6 @@ const initialState: AnalysisState = {
   jobHistory: [],
   ui: {
     currentView: 'submission',
-    selectedJobId: undefined,
     submissionPanelExpanded: true,
     trackingPanelExpanded: true,
     historyPanelExpanded: false,
@@ -40,7 +35,6 @@ const initialState: AnalysisState = {
     jobsBeingPolled: [],
   },
   isLoading: false,
-  error: undefined,
 };
 
 const analysisSlice = createSlice({
@@ -101,7 +95,11 @@ const analysisSlice = createSlice({
     },
 
     setSelectedJob: (state, action: PayloadAction<string | undefined>) => {
-      state.ui.selectedJobId = action.payload;
+      if (action.payload) {
+        state.ui.selectedJobId = action.payload;
+      } else {
+        delete state.ui.selectedJobId;
+      }
     },
 
     togglePanel: (state, action: PayloadAction<'submission' | 'tracking' | 'history'>) => {
@@ -158,12 +156,12 @@ const analysisSlice = createSlice({
       state.isLoading = action.payload;
     },
 
-    setError: (state, action: PayloadAction<string | undefined>) => {
+    setError: (state, action: PayloadAction<string>) => {
       state.error = action.payload;
     },
 
     clearError: state => {
-      state.error = undefined;
+      delete state.error;
     },
 
     // Bulk actions for history management

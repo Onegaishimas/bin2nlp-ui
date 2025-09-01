@@ -19,7 +19,14 @@ export interface ErrorContext {
 
 export interface ProcessedError {
   id: string;
-  type: 'network' | 'validation' | 'authentication' | 'authorization' | 'server' | 'client' | 'unknown';
+  type:
+    | 'network'
+    | 'validation'
+    | 'authentication'
+    | 'authorization'
+    | 'server'
+    | 'client'
+    | 'unknown';
   severity: 'low' | 'medium' | 'high' | 'critical';
   userMessage: string;
   technicalMessage: string;
@@ -78,14 +85,14 @@ class ErrorHandlingService {
     // Handle RTK Query errors
     if (this.isFetchBaseQueryError(error)) {
       statusCode = error.status as number;
-      
+
       if (statusCode === 0 || error.status === 'FETCH_ERROR') {
         type = 'network';
         technicalMessage = 'Network connection failed';
         canRetry = true;
       } else if (statusCode >= 400 && statusCode < 500) {
-        type = statusCode === 401 ? 'authentication' : 
-              statusCode === 403 ? 'authorization' : 'client';
+        type =
+          statusCode === 401 ? 'authentication' : statusCode === 403 ? 'authorization' : 'client';
         technicalMessage = `HTTP ${statusCode}`;
       } else if (statusCode >= 500) {
         type = 'server';
@@ -103,14 +110,17 @@ class ErrorHandlingService {
     // Handle standard JavaScript errors
     else if (error instanceof Error) {
       technicalMessage = error.message;
-      
+
       // Categorize by error type or message
       if (error.name === 'ValidationError' || error.message.includes('validation')) {
         type = 'validation';
       } else if (error.message.includes('network') || error.message.includes('fetch')) {
         type = 'network';
         canRetry = true;
-      } else if (error.message.includes('unauthorized') || error.message.includes('authentication')) {
+      } else if (
+        error.message.includes('unauthorized') ||
+        error.message.includes('authentication')
+      ) {
         type = 'authentication';
       } else {
         type = 'client';
@@ -126,7 +136,7 @@ class ErrorHandlingService {
 
     // Generate user-friendly message
     const userMessage = this.getUserMessage(type, statusCode, technicalMessage);
-    
+
     // Determine severity
     const severity = this.getSeverity(type, statusCode);
 
@@ -139,11 +149,11 @@ class ErrorHandlingService {
       severity,
       userMessage,
       technicalMessage,
-      code,
-      statusCode,
       canRetry,
-      actions,
-      context: fullContext,
+      ...(code && { code }),
+      ...(statusCode && { statusCode }),
+      ...(actions && { actions }),
+      ...(fullContext && { context: fullContext }),
     };
 
     // Log the error
@@ -155,20 +165,26 @@ class ErrorHandlingService {
   /**
    * Get user-friendly error message based on error type
    */
-  private getUserMessage(type: ProcessedError['type'], statusCode?: number, technical?: string): string {
+  private getUserMessage(
+    type: ProcessedError['type'],
+    statusCode?: number,
+    technical?: string
+  ): string {
     switch (type) {
       case 'network':
         return 'Unable to connect to the server. Please check your internet connection and try again.';
-      
+
       case 'authentication':
         return 'Your session has expired. Please refresh the page and try again.';
-      
+
       case 'authorization':
-        return 'You don\'t have permission to perform this action.';
-      
+        return "You don't have permission to perform this action.";
+
       case 'validation':
-        return technical || 'The information provided is invalid. Please check your input and try again.';
-      
+        return (
+          technical || 'The information provided is invalid. Please check your input and try again.'
+        );
+
       case 'server':
         if (statusCode === 429) {
           return 'Too many requests. Please wait a moment and try again.';
@@ -177,13 +193,13 @@ class ErrorHandlingService {
           return 'The service is temporarily unavailable. Please try again later.';
         }
         return 'A server error occurred. Our team has been notified and is working on a fix.';
-      
+
       case 'client':
         if (technical?.includes('file') || technical?.includes('upload')) {
-          return 'There was a problem with your file. Please check that it\'s a valid binary executable and try again.';
+          return "There was a problem with your file. Please check that it's a valid binary executable and try again.";
         }
         return 'Something went wrong. Please try again or contact support if the problem persists.';
-      
+
       default:
         return 'An unexpected error occurred. Please try again or contact support if the problem persists.';
     }
@@ -192,7 +208,10 @@ class ErrorHandlingService {
   /**
    * Determine error severity
    */
-  private getSeverity(type: ProcessedError['type'], statusCode?: number): ProcessedError['severity'] {
+  private getSeverity(
+    type: ProcessedError['type'],
+    statusCode?: number
+  ): ProcessedError['severity'] {
     if (type === 'network' && statusCode === 0) return 'high';
     if (type === 'server' && statusCode && statusCode >= 500) return 'high';
     if (type === 'authentication') return 'medium';
@@ -205,7 +224,10 @@ class ErrorHandlingService {
   /**
    * Get suggested actions for error type
    */
-  private getSuggestedActions(type: ProcessedError['type'], canRetry: boolean): ProcessedError['actions'] {
+  private getSuggestedActions(
+    type: ProcessedError['type'],
+    canRetry: boolean
+  ): ProcessedError['actions'] {
     const actions: ProcessedError['actions'] = [];
 
     if (canRetry) {
@@ -223,7 +245,7 @@ class ErrorHandlingService {
           action: 'check-connection',
         });
         break;
-      
+
       case 'authentication':
         actions.push({
           label: 'Refresh Page',
@@ -231,7 +253,7 @@ class ErrorHandlingService {
           primary: !canRetry,
         });
         break;
-      
+
       case 'validation':
         actions.push({
           label: 'Review Input',
@@ -239,7 +261,7 @@ class ErrorHandlingService {
           primary: true,
         });
         break;
-      
+
       case 'server':
         actions.push({
           label: 'Contact Support',
@@ -268,15 +290,16 @@ class ErrorHandlingService {
       timestamp: new Date().toISOString(),
       level: this.mapSeverityToLevel(processedError.severity),
       message: processedError.userMessage,
-      error: originalError,
+      error: originalError as Error | FetchBaseQueryError | ApiError,
       context: processedError.context!,
-      stackTrace: originalError instanceof Error ? originalError.stack : undefined,
-      breadcrumbs: [...this.breadcrumbs],
+      ...(originalError instanceof Error &&
+        originalError.stack && { stackTrace: originalError.stack }),
+      ...(this.breadcrumbs && { breadcrumbs: [...this.breadcrumbs] }),
     };
 
     // Add to error log
     this.errorLog.push(report);
-    
+
     // Maintain log size
     if (this.errorLog.length > this.maxLogSize) {
       this.errorLog = this.errorLog.slice(-this.maxLogSize);
@@ -284,11 +307,15 @@ class ErrorHandlingService {
 
     // Console logging for development
     if (process.env.NODE_ENV === 'development') {
-      const logMethod = report.level === 'fatal' || report.level === 'error' ? 'error' : 
-                       report.level === 'warn' ? 'warn' : 'info';
-      
-      const consoleMethod = logMethod === 'error' ? console.error : 
-                        logMethod === 'warn' ? console.warn : console.info;
+      const logMethod =
+        report.level === 'fatal' || report.level === 'error'
+          ? 'error'
+          : report.level === 'warn'
+            ? 'warn'
+            : 'info';
+
+      const consoleMethod =
+        logMethod === 'error' ? console.error : logMethod === 'warn' ? console.warn : console.info;
       consoleMethod(`[${report.level.toUpperCase()}] ${report.message}`, {
         errorId: report.errorId,
         error: originalError,
@@ -301,15 +328,15 @@ class ErrorHandlingService {
    * Add breadcrumb for error context
    */
   public addBreadcrumb(category: string, message: string, data?: Record<string, unknown>): void {
-    this.breadcrumbs.push({
+    this.breadcrumbs?.push({
       timestamp: new Date().toISOString(),
       category,
       message,
-      data,
+      ...(data && { data }),
     });
 
     // Maintain breadcrumb size
-    if (this.breadcrumbs.length > this.maxBreadcrumbs) {
+    if (this.breadcrumbs && this.breadcrumbs.length > this.maxBreadcrumbs) {
       this.breadcrumbs = this.breadcrumbs.slice(-this.maxBreadcrumbs);
     }
   }
@@ -352,10 +379,11 @@ class ErrorHandlingService {
    */
   private createContext(partial?: Partial<ErrorContext>): ErrorContext {
     return {
-      sessionId: this.sessionId,
       timestamp: new Date().toISOString(),
-      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
-      url: typeof window !== 'undefined' ? window.location.href : undefined,
+      ...(this.sessionId && { sessionId: this.sessionId }),
+      ...(typeof navigator !== 'undefined' &&
+        navigator.userAgent && { userAgent: navigator.userAgent }),
+      ...(typeof window !== 'undefined' && { url: window.location.href }),
       ...partial,
     };
   }
@@ -364,7 +392,7 @@ class ErrorHandlingService {
    * Check if error is RTK Query FetchBaseQueryError
    */
   private isFetchBaseQueryError(error: unknown): error is FetchBaseQueryError {
-    return error && typeof error === 'object' && 'status' in error;
+    return Boolean(error && typeof error === 'object' && 'status' in error);
   }
 
   /**
@@ -372,11 +400,16 @@ class ErrorHandlingService {
    */
   private mapSeverityToLevel(severity: ProcessedError['severity']): ErrorReport['level'] {
     switch (severity) {
-      case 'low': return 'info';
-      case 'medium': return 'warn';
-      case 'high': return 'error';
-      case 'critical': return 'fatal';
-      default: return 'error';
+      case 'low':
+        return 'info';
+      case 'medium':
+        return 'warn';
+      case 'high':
+        return 'error';
+      case 'critical':
+        return 'fatal';
+      default:
+        return 'error';
     }
   }
 
@@ -404,10 +437,10 @@ class ErrorHandlingService {
     recentErrorRate: number; // errors per hour in last 24 hours
   } {
     const now = Date.now();
-    const oneHourAgo = now - (60 * 60 * 1000);
+    const oneHourAgo = now - 60 * 60 * 1000;
 
-    const veryRecentErrors = this.errorLog.filter(log => 
-      new Date(log.timestamp).getTime() > oneHourAgo
+    const veryRecentErrors = this.errorLog.filter(
+      log => new Date(log.timestamp).getTime() > oneHourAgo
     );
 
     const errorsByType: Record<string, number> = {};
@@ -430,13 +463,17 @@ class ErrorHandlingService {
    * Export logs for external reporting
    */
   public exportLogs(): string {
-    return JSON.stringify({
-      sessionId: this.sessionId,
-      exportedAt: new Date().toISOString(),
-      logs: this.errorLog,
-      breadcrumbs: this.breadcrumbs,
-      stats: this.getStats(),
-    }, null, 2);
+    return JSON.stringify(
+      {
+        sessionId: this.sessionId,
+        exportedAt: new Date().toISOString(),
+        logs: this.errorLog,
+        breadcrumbs: this.breadcrumbs,
+        stats: this.getStats(),
+      },
+      null,
+      2
+    );
   }
 }
 

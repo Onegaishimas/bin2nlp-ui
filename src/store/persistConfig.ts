@@ -5,31 +5,35 @@
 
 import { persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage'; // localStorage
-import type { AnalysisState } from '../types/analysis.types';
+import type { AnalysisState } from './slices/analysisSlice';
 
 // Transform to exclude sensitive data and large objects
 const analysisTransform = {
   in: (inboundState: AnalysisState): AnalysisState => {
     // Clean up any sensitive data before persisting
-    const cleanJobHistory = inboundState.jobHistory.map(job => ({
-      ...job,
-      config: {
-        ...job.config,
-        // Don't persist API keys
-        llmApiKey: undefined,
-      },
-      // Limit results size for storage efficiency
-      results: job.results ? {
-        decompilation: job.results.decompilation ? {
-          ...job.results.decompilation,
-          // Keep metadata but limit code size
-          code: job.results.decompilation.code?.substring(0, 10000) || '',
-        } : undefined,
-        translation: job.results.translation,
-      } : undefined,
-    }));
+    const cleanJobHistory = (inboundState.jobHistory || []).map(job => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { llmApiKey: _, ...configWithoutApiKey } = job.config;
+      return {
+        ...job,
+        config: configWithoutApiKey,
+        // Limit results size for storage efficiency
+        ...(job.results && {
+          results: {
+            ...(job.results.decompilation && {
+              decompilation: {
+                ...job.results.decompilation,
+                // Keep metadata but limit code size
+                code: job.results.decompilation.code?.substring(0, 10000) || '',
+              },
+            }),
+            ...(job.results.translation && { translation: job.results.translation }),
+          },
+        }),
+      };
+    });
 
-    return {
+    const result = {
       ...inboundState,
       // Don't persist active jobs (they should be refreshed)
       activeJobs: {},
@@ -42,8 +46,12 @@ const analysisTransform = {
       },
       // Reset loading states
       isLoading: false,
-      error: undefined,
     };
+
+    // Remove error property instead of setting to undefined
+    delete result.error;
+
+    return result;
   },
   out: (outboundState: AnalysisState): AnalysisState => {
     // No transformation needed when reading from storage
@@ -65,6 +73,11 @@ export const analysisPersistConfig = {
 };
 
 // Helper function to create persisted reducer
-export const createPersistedAnalysisReducer = (reducer: unknown) => {
+export const createPersistedAnalysisReducer = (
+  reducer: (
+    state: AnalysisState | undefined,
+    action: { type: string; payload?: unknown }
+  ) => AnalysisState
+) => {
   return persistReducer(analysisPersistConfig, reducer);
 };

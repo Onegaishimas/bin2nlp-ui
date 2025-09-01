@@ -1,22 +1,14 @@
 import React, { useState } from 'react';
-import {
-  Box,
-  Button,
-  Typography,
-  Grid,
-  Alert,
-  Snackbar,
-  Paper,
-} from '@mui/material';
-import {
-  Upload as UploadIcon,
-} from '@mui/icons-material';
+import { Box, Button, Typography, Alert, Snackbar, Paper } from '@mui/material';
+import { GridLegacy as Grid } from '@mui/material';
+import { Upload as UploadIcon } from '@mui/icons-material';
 import { FileUploadZone } from '../components/upload/FileUploadZone';
 import { JobConfigurationForm } from '../components/analysis/JobConfigurationForm';
 import { useSubmitJobMutation } from '../services/api/analysisApi';
 import { useAppDispatch } from '../store/hooks';
 import { addJob } from '../store/slices/analysisSlice';
 import type { JobSubmissionRequest } from '../services/api/analysisApi';
+import type { JobStatusType, AnalysisDepthType, JobPhaseType } from '../types/analysis.types';
 
 export const UploadPage: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -54,29 +46,33 @@ export const UploadPage: React.FC = () => {
 
     try {
       const result = await submitJob(request).unwrap();
-      
+
       // Add job to Redux store for tracking
-      dispatch(addJob({
-        jobId: result.job_id,
-        filename: selectedFile.name,
-        fileSize: selectedFile.size,
-        status: result.status as 'queued' | 'processing' | 'completed' | 'failed' | 'cancelled',
-        progress: 0,
-        submittedAt: new Date().toISOString(),
-        config: {
-          analysisDepth: request.analysis_depth,
-          translationDetail: request.translation_detail,
-          llmProvider: request.llm_provider || null,
-          llmModel: request.llm_model || null,
-        },
-      }));
+      dispatch(
+        addJob({
+          id: result.job_id,
+          fileName: selectedFile.name,
+          fileSize: selectedFile.size,
+          fileType: selectedFile.type || 'application/octet-stream',
+          status: result.status as JobStatusType,
+          progress: 0,
+          phase: 'queued' as JobPhaseType,
+          submittedAt: new Date().toISOString(),
+          config: {
+            analysisDepth: request.analysis_depth as AnalysisDepthType,
+            includeComments: false,
+            decompilerOptions: {},
+            ...(request.llm_provider && { llmProvider: request.llm_provider }),
+            ...(request.llm_api_key && { llmApiKey: request.llm_api_key }),
+          },
+        })
+      );
 
       setSuccessMessage(`Job submitted successfully! Job ID: ${result.job_id.slice(0, 8)}...`);
-      
+
       // Clear form
       setSelectedFile(null);
       setJobConfig({});
-
     } catch (error) {
       console.error('Failed to submit job:', error);
     }
@@ -94,20 +90,20 @@ export const UploadPage: React.FC = () => {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
+      <Typography variant='h4' gutterBottom>
         Upload & Analyze Binary
       </Typography>
-      
-      <Typography variant="body1" color="text.secondary" paragraph>
-        Upload your binary file and configure the analysis parameters. 
-        The system will decompile your binary and optionally translate it to natural language using AI.
+
+      <Typography variant='body1' color='text.secondary' paragraph>
+        Upload your binary file and configure the analysis parameters. The system will decompile
+        your binary and optionally translate it to natural language using AI.
       </Typography>
 
       <Grid container spacing={3}>
         {/* File Upload */}
-        <Grid item xs={12} md={6}>
+        <Grid xs={12} md={6}>
           <Paper elevation={1} sx={{ p: 2, height: 'fit-content' }}>
-            <Typography variant="h6" gutterBottom>
+            <Typography variant='h6' gutterBottom>
               1. Select Binary File
             </Typography>
             <FileUploadZone
@@ -120,38 +116,36 @@ export const UploadPage: React.FC = () => {
         </Grid>
 
         {/* Configuration */}
-        <Grid item xs={12} md={6}>
-          <Typography variant="h6" gutterBottom>
+        <Grid xs={12} md={6}>
+          <Typography variant='h6' gutterBottom>
             2. Configure Analysis
           </Typography>
-          <JobConfigurationForm
-            onConfigChange={handleConfigChange}
-            disabled={isSubmitting}
-          />
+          <JobConfigurationForm onConfigChange={handleConfigChange} disabled={isSubmitting} />
         </Grid>
 
         {/* Submit Button */}
-        <Grid item xs={12}>
+        <Grid xs={12}>
           <Paper elevation={1} sx={{ p: 3, textAlign: 'center' }}>
-            <Typography variant="h6" gutterBottom>
+            <Typography variant='h6' gutterBottom>
               3. Start Analysis
             </Typography>
-            
+
             {!isConfigValid() && jobConfig.llm_provider && (
-              <Alert severity="warning" sx={{ mb: 2 }}>
+              <Alert severity='warning' sx={{ mb: 2 }}>
                 API key is required when LLM translation is enabled.
               </Alert>
             )}
 
             {submitError && (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                Failed to submit job: {(submitError as { data?: { message?: string } })?.data?.message || 'Unknown error'}
+              <Alert severity='error' sx={{ mb: 2 }}>
+                Failed to submit job:{' '}
+                {(submitError as { data?: { message?: string } })?.data?.message || 'Unknown error'}
               </Alert>
             )}
 
             <Button
-              variant="contained"
-              size="large"
+              variant='contained'
+              size='large'
               onClick={handleSubmitJob}
               disabled={!canSubmit}
               loading={isSubmitting}
@@ -163,14 +157,16 @@ export const UploadPage: React.FC = () => {
 
             {selectedFile && (
               <Box sx={{ mt: 2 }}>
-                <Typography variant="body2" color="text.secondary">
-                  <strong>File:</strong> {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                <Typography variant='body2' color='text.secondary'>
+                  <strong>File:</strong> {selectedFile.name} (
+                  {(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
                   <br />
                   <strong>Analysis:</strong> {jobConfig.analysis_depth || 'standard'} depth
                   {jobConfig.llm_provider && (
                     <>
                       <br />
-                      <strong>AI Translation:</strong> {jobConfig.llm_provider} ({jobConfig.translation_detail || 'standard'} detail)
+                      <strong>AI Translation:</strong> {jobConfig.llm_provider} (
+                      {jobConfig.translation_detail || 'standard'} detail)
                     </>
                   )}
                 </Typography>
@@ -187,7 +183,7 @@ export const UploadPage: React.FC = () => {
         onClose={() => setSuccessMessage(null)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert severity="success" onClose={() => setSuccessMessage(null)}>
+        <Alert severity='success' onClose={() => setSuccessMessage(null)}>
           {successMessage}
         </Alert>
       </Snackbar>

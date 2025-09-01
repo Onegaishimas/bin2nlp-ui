@@ -46,17 +46,17 @@ class LLMProviderManager {
    */
   public async getProviders(): Promise<LLMProvider[]> {
     // Check cache first
-    if (this.providerCache && (Date.now() - this.providerCache.timestamp) < this.CACHE_DURATION) {
+    if (this.providerCache && Date.now() - this.providerCache.timestamp < this.CACHE_DURATION) {
       return this.providerCache.data;
     }
 
     try {
-      const result = await store.dispatch(
-        analysisApi.endpoints.getLLMProviders.initiate()
-      ).unwrap();
+      const result = await store
+        .dispatch(analysisApi.endpoints.getLLMProviders.initiate())
+        .unwrap();
 
       const providers = result.providers || [];
-      
+
       // Update cache
       this.providerCache = {
         data: providers,
@@ -89,8 +89,8 @@ class LLMProviderManager {
     const credentials: ProviderCredentials = {
       providerId,
       apiKey: apiKey.trim(),
-      model,
-      expiresAt: Date.now() + (8 * 60 * 60 * 1000), // 8 hours
+      expiresAt: Date.now() + 8 * 60 * 60 * 1000, // 8 hours
+      ...(model && { model }),
     };
 
     this.credentials.set(providerId, credentials);
@@ -105,7 +105,7 @@ class LLMProviderManager {
    */
   public getProviderCredentials(providerId: string): ProviderCredentials | undefined {
     const credentials = this.credentials.get(providerId);
-    
+
     // Check if credentials are expired
     if (credentials && credentials.expiresAt && Date.now() > credentials.expiresAt) {
       this.removeProviderCredentials(providerId);
@@ -137,7 +137,7 @@ class LLMProviderManager {
    */
   public async testProvider(providerId: string, apiKey?: string): Promise<ProviderHealthStatus> {
     const testApiKey = apiKey || this.getProviderCredentials(providerId)?.apiKey;
-    
+
     if (!testApiKey) {
       const status: ProviderHealthStatus = {
         providerId,
@@ -159,13 +159,14 @@ class LLMProviderManager {
 
     try {
       const startTime = Date.now();
-      
-      const result = await store.dispatch(
-        analysisApi.endpoints.testLLMProvider.initiate({
-          providerId,
-          apiKey: testApiKey,
-        })
-      ).unwrap();
+
+      const result = await store
+        .dispatch(
+          analysisApi.endpoints.testLLMProvider.initiate({
+            providerId,
+          })
+        )
+        .unwrap();
 
       const responseTime = Date.now() - startTime;
 
@@ -173,13 +174,12 @@ class LLMProviderManager {
         providerId,
         status: result.status === 'success' ? 'healthy' : 'error',
         lastChecked: Date.now(),
-        responseTime,
-        error: result.status === 'error' ? result.message : undefined,
+        ...(responseTime && { responseTime }),
+        ...(result.status === 'error' && result.message && { error: result.message }),
       };
 
       this.healthStatus.set(providerId, status);
       return status;
-
     } catch (error) {
       const status: ProviderHealthStatus = {
         providerId,
@@ -215,8 +215,8 @@ class LLMProviderManager {
    */
   public async testAllProviders(): Promise<Record<string, ProviderHealthStatus>> {
     const results: Record<string, ProviderHealthStatus> = {};
-    
-    const testPromises = Array.from(this.credentials.keys()).map(async (providerId) => {
+
+    const testPromises = Array.from(this.credentials.keys()).map(async providerId => {
       const status = await this.testProvider(providerId);
       results[providerId] = status;
       return status;
@@ -239,7 +239,7 @@ class LLMProviderManager {
 
     // Simple cost estimation based on file size and analysis depth
     const baseTokens = Math.ceil(fileSize / 100); // Rough estimate: 1 token per 100 bytes
-    
+
     const depthMultipliers = {
       basic: 1,
       detailed: 2.5,
@@ -247,13 +247,13 @@ class LLMProviderManager {
     };
 
     const estimatedTokens = Math.ceil(baseTokens * depthMultipliers[analysisDepth]);
-    
+
     // Provider-specific pricing (rough estimates)
     const pricingPer1KTokens: Record<string, number> = {
-      openai: 0.002,      // GPT-4
-      anthropic: 0.008,   // Claude
-      gemini: 0.001,      // Gemini Pro
-      ollama: 0,          // Local/free
+      openai: 0.002, // GPT-4
+      anthropic: 0.008, // Claude
+      gemini: 0.001, // Gemini Pro
+      ollama: 0, // Local/free
     };
 
     const pricePerToken = pricingPer1KTokens[providerId] || 0.002;
@@ -261,7 +261,7 @@ class LLMProviderManager {
 
     return {
       providerId,
-      model: provider.models[0] || 'default',
+      model: provider.available_models[0] || 'default',
       estimatedTokens,
       estimatedCost: Math.round(estimatedCost * 100) / 100, // Round to 2 decimal places
       currency: 'USD',
@@ -277,7 +277,7 @@ class LLMProviderManager {
     unhealthy: LLMProvider[];
   }> {
     const providers = await this.getProviders();
-    
+
     const withCredentials: LLMProvider[] = [];
     const withoutCredentials: LLMProvider[] = [];
     const unhealthy: LLMProvider[] = [];
@@ -309,7 +309,7 @@ class LLMProviderManager {
       const stored = sessionStorage.getItem(this.SESSION_STORAGE_KEY);
       if (stored) {
         const data = JSON.parse(stored);
-        
+
         // Validate and filter expired credentials
         Object.entries(data).forEach(([providerId, creds]) => {
           const credentials = creds as ProviderCredentials;
@@ -351,7 +351,7 @@ class LLMProviderManager {
     // Clean up expired credentials periodically
     const cleanupInterval = setInterval(() => {
       let hasExpired = false;
-      
+
       this.credentials.forEach((credentials, providerId) => {
         if (credentials.expiresAt && Date.now() > credentials.expiresAt) {
           this.credentials.delete(providerId);
@@ -378,7 +378,7 @@ class LLMProviderManager {
     this.credentials.clear();
     this.healthStatus.clear();
     this.providerCache = null;
-    
+
     if (typeof window !== 'undefined') {
       sessionStorage.removeItem(this.SESSION_STORAGE_KEY);
     }
@@ -395,10 +395,10 @@ class LLMProviderManager {
   } {
     const now = Date.now();
     const oneHour = 60 * 60 * 1000;
-    
+
     let credentialsExpiringSoon = 0;
     this.credentials.forEach(creds => {
-      if (creds.expiresAt && (creds.expiresAt - now) < oneHour) {
+      if (creds.expiresAt && creds.expiresAt - now < oneHour) {
         credentialsExpiringSoon++;
       }
     });

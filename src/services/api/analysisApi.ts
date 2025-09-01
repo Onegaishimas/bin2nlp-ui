@@ -1,6 +1,7 @@
 import { createApi, fetchBaseQuery, retry } from '@reduxjs/toolkit/query/react';
 import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query/react';
 import { config } from '../../utils/config';
+import { logger } from '../../utils/logger';
 
 // Types for API requests and responses
 export interface JobSubmissionRequest {
@@ -72,72 +73,94 @@ export interface ApiError {
   timestamp?: string;
 }
 
-// Enhanced base query with retry logic and error handling
-const baseQueryWithRetry = retry(
-  fetchBaseQuery({
-    baseUrl: `${config.apiBaseUrl}/api/v1`,
-    timeout: 30000, // 30 seconds timeout
-    prepareHeaders: (headers, { endpoint }) => {
-      // Remove default Content-Type for FormData requests
-      if (endpoint !== 'submitJob') {
-        headers.set('Content-Type', 'application/json');
-      }
-      
-      // Add request ID for tracking
-      headers.set('X-Request-ID', crypto.randomUUID());
-      
-      // Add timestamp
-      headers.set('X-Request-Timestamp', new Date().toISOString());
-      
-      return headers;
-    },
-    // Custom response handler
-    responseHandler: async (response) => {
-      const contentType = response.headers.get('content-type');
-      
-      if (contentType && contentType.includes('application/json')) {
-        const data = await response.json();
-        
-        // Handle API error responses
-        if (!response.ok) {
-          throw {
-            status: response.status,
-            data: {
-              message: data.message || data.error || 'Request failed',
-              code: data.code || `HTTP_${response.status}`,
-              details: data.details || {},
-              timestamp: data.timestamp || new Date().toISOString(),
-            } as ApiError,
-          };
-        }
-        
-        return data;
-      }
-      
-      // Handle non-JSON responses
+// Create base query with logging
+const baseQuery = fetchBaseQuery({
+  baseUrl: `${config.apiBaseUrl}/api/v1`,
+  timeout: 30000, // 30 seconds timeout
+  prepareHeaders: (headers, { endpoint }) => {
+    // Remove default Content-Type for FormData requests
+    if (endpoint !== 'submitJob') {
+      headers.set('Content-Type', 'application/json');
+    }
+
+    // Add request ID for tracking
+    headers.set('X-Request-ID', crypto.randomUUID());
+
+    // Add timestamp
+    headers.set('X-Request-Timestamp', new Date().toISOString());
+
+    return headers;
+  },
+  // Custom response handler
+  responseHandler: async response => {
+    const contentType = response.headers.get('content-type');
+
+    if (contentType && contentType.includes('application/json')) {
+      const data = await response.json();
+
+      // Handle API error responses
       if (!response.ok) {
         throw {
           status: response.status,
           data: {
-            message: `HTTP ${response.status}: ${response.statusText}`,
-            code: `HTTP_${response.status}`,
-            timestamp: new Date().toISOString(),
+            message: data.message || data.error || 'Request failed',
+            code: data.code || `HTTP_${response.status}`,
+            details: data.details || {},
+            timestamp: data.timestamp || new Date().toISOString(),
           } as ApiError,
         };
       }
-      
-      return response.text();
-    },
-  }) as BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError>,
-  {
-    maxRetries: 3,
-    backoff: async (attempt) => {
-      // Exponential backoff: 1s, 2s, 4s
-      const delay = Math.min(1000 * Math.pow(2, attempt), 10000);
-      await new Promise(resolve => setTimeout(resolve, delay));
-    },
+
+      return data;
+    }
+
+    // Handle non-JSON responses
+    if (!response.ok) {
+      throw {
+        status: response.status,
+        data: {
+          message: `HTTP ${response.status}: ${response.statusText}`,
+          code: `HTTP_${response.status}`,
+          timestamp: new Date().toISOString(),
+        } as ApiError,
+      };
+    }
+
+    return response.text();
+  },
+});
+
+// Logging wrapper for base query
+const baseQueryWithLogging: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (
+  args,
+  api,
+  extraOptions
+) => {
+  const method = typeof args === 'string' ? 'GET' : args.method || 'GET';
+  const url = typeof args === 'string' ? args : args.url;
+
+  logger.apiRequest(method, url, typeof args === 'object' ? args.body : undefined);
+
+  const result = await baseQuery(args, api, extraOptions);
+
+  if (result.error) {
+    logger.apiError(method, url, result.error);
+  } else {
+    logger.apiResponse(method, url, 200, result.data);
   }
-);
+
+  return result;
+};
+
+// Enhanced base query with retry logic
+const baseQueryWithRetry = retry(baseQueryWithLogging, {
+  maxRetries: 3,
+  backoff: async attempt => {
+    // Exponential backoff: 1s, 2s, 4s
+    const delay = Math.min(1000 * Math.pow(2, attempt), 10000);
+    await new Promise(resolve => setTimeout(resolve, delay));
+  },
+});
 
 // RTK Query API definition
 export const analysisApi = createApi({
@@ -147,27 +170,29 @@ export const analysisApi = createApi({
   endpoints: builder => ({
     // Submit a new analysis job
     submitJob: builder.mutation<JobSubmissionResponse, JobSubmissionRequest>({
-      query: ({ 
-        file, 
+      query: ({
+        file,
         analysis_depth = 'standard',
         llm_provider,
         llm_model,
         llm_endpoint_url,
         llm_api_key,
-        translation_detail = 'standard'
+        translation_detail = 'standard',
       }) => {
         // Validate file before upload
         const maxSize = 100 * 1024 * 1024; // 100MB
-        
+
         if (file.size > maxSize) {
-          throw new Error(`File size ${(file.size / 1024 / 1024).toFixed(1)}MB exceeds maximum of 100MB`);
+          throw new Error(
+            `File size ${(file.size / 1024 / 1024).toFixed(1)}MB exceeds maximum of 100MB`
+          );
         }
-        
+
         const formData = new FormData();
         formData.append('file', file);
         formData.append('analysis_depth', analysis_depth);
         formData.append('translation_detail', translation_detail);
-        
+
         // Add optional LLM parameters
         if (llm_provider) {
           formData.append('llm_provider', llm_provider);
@@ -191,7 +216,7 @@ export const analysisApi = createApi({
       },
       invalidatesTags: ['Job'],
       // Transform error response for better user experience
-      transformErrorResponse: (response) => {
+      transformErrorResponse: response => {
         if (typeof response.data === 'object' && response.data !== null) {
           const error = response.data as ApiError;
           return {
@@ -214,14 +239,18 @@ export const analysisApi = createApi({
       // Cache for 30 seconds by default (adjust based on job status in component)
       keepUnusedDataFor: 30,
       // Transform response to ensure consistency
-      transformResponse: (response: JobStatusResponse) => ({
+      transformResponse: (response: JobStatusResponse): JobStatusResponse => ({
         ...response,
         // Ensure progress is always a number between 0-100
         progress_percentage: Math.min(100, Math.max(0, response.progress_percentage || 0)),
         // Add derived fields for UI
-        isActive: ['queued', 'processing'].includes(response.status),
-        isCompleted: ['completed', 'failed', 'cancelled'].includes(response.status),
-        duration: response.results?.duration_seconds ? response.results.duration_seconds * 1000 : undefined,
+        ...(['queued', 'processing'].includes(response.status) && { isActive: true }),
+        ...(['completed', 'failed', 'cancelled'].includes(response.status) && {
+          isCompleted: true,
+        }),
+        ...(response.results?.duration_seconds && {
+          duration: response.results.duration_seconds * 1000,
+        }),
       }),
     }),
 
@@ -234,11 +263,6 @@ export const analysisApi = createApi({
       invalidatesTags: (_result, _error, jobId) => [{ type: 'Job', id: jobId }],
     }),
 
-    // Get job results (when completed)
-    getJobResults: builder.query<JobStatusResponse['results'], string>({
-      query: jobId => `/decompile/${jobId}/results`,
-      providesTags: (_result, _error, jobId) => [{ type: 'Job', id: jobId }],
-    }),
 
     // Get list of available LLM providers
     getLLMProviders: builder.query<
@@ -305,8 +329,6 @@ export const {
   useGetJobStatusQuery,
   useLazyGetJobStatusQuery,
   useCancelJobMutation,
-  useGetJobResultsQuery,
-  useLazyGetJobResultsQuery,
   useGetLLMProvidersQuery,
   useTestLLMProviderMutation,
   useGetSystemHealthQuery,

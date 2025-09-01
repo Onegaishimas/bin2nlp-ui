@@ -7,12 +7,12 @@ import {
   Box,
   Chip,
   Button,
-  Grid,
   Alert,
   LinearProgress,
   Stack,
   Divider,
 } from '@mui/material';
+import { GridLegacy as Grid } from '@mui/material';
 import {
   Refresh as RefreshIcon,
   CheckCircle as HealthyIcon,
@@ -61,14 +61,14 @@ const ServiceStatus: React.FC<ServiceStatusProps> = ({
   const getStatusIcon = (status: string) => {
     switch (status.toLowerCase()) {
       case 'healthy':
-        return <HealthyIcon color="success" />;
+        return <HealthyIcon color='success' />;
       case 'degraded':
-        return <DegradedIcon color="warning" />;
+        return <DegradedIcon color='warning' />;
       case 'down':
       case 'error':
-        return <DownIcon color="error" />;
+        return <DownIcon color='error' />;
       default:
-        return <DownIcon color="disabled" />;
+        return <DownIcon color='disabled' />;
     }
   };
 
@@ -88,11 +88,19 @@ const ServiceStatus: React.FC<ServiceStatusProps> = ({
         }
         title={
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="h6">{name}</Typography>
+            <Typography variant='h6'>{name}</Typography>
             <Chip
-              size="small"
+              size='small'
               label={status.toUpperCase()}
-              color={getStatusColor(status) as 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning'}
+              color={
+                getStatusColor(status) as
+                  | 'primary'
+                  | 'secondary'
+                  | 'error'
+                  | 'info'
+                  | 'success'
+                  | 'warning'
+              }
             />
           </Box>
         }
@@ -102,21 +110,17 @@ const ServiceStatus: React.FC<ServiceStatusProps> = ({
         <Stack spacing={2}>
           {responseTime !== undefined && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <ResponseTimeIcon color="action" />
-              <Typography variant="body2">
+              <ResponseTimeIcon color='action' />
+              <Typography variant='body2'>
                 Response Time: {formatResponseTime(responseTime)}
               </Typography>
             </Box>
           )}
 
-          {message && (
-            <Alert severity="info" size="small">
-              {message}
-            </Alert>
-          )}
+          {message && <Alert severity='info'>{message}</Alert>}
 
           {note && (
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant='body2' color='text.secondary'>
               {note}
             </Typography>
           )}
@@ -128,7 +132,7 @@ const ServiceStatus: React.FC<ServiceStatusProps> = ({
 
 export const SystemHealthDashboard: React.FC = () => {
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
-  
+
   const {
     data: healthData,
     isLoading,
@@ -165,20 +169,20 @@ export const SystemHealthDashboard: React.FC = () => {
   const getOverallStatusIcon = (status: string) => {
     switch (status.toLowerCase()) {
       case 'healthy':
-        return <HealthyIcon color="success" />;
+        return <HealthyIcon color='success' />;
       case 'degraded':
-        return <DegradedIcon color="warning" />;
+        return <DegradedIcon color='warning' />;
       case 'down':
-        return <DownIcon color="error" />;
+        return <DownIcon color='error' />;
       default:
-        return <DownIcon color="disabled" />;
+        return <DownIcon color='disabled' />;
     }
   };
 
   if (isLoading && !healthData) {
     return (
       <Box>
-        <Typography variant="h4" gutterBottom>
+        <Typography variant='h4' gutterBottom>
           System Health Monitor
         </Typography>
         <Card>
@@ -194,18 +198,19 @@ export const SystemHealthDashboard: React.FC = () => {
   if (error) {
     return (
       <Box>
-        <Typography variant="h4" gutterBottom>
+        <Typography variant='h4' gutterBottom>
           System Health Monitor
         </Typography>
-        <Alert 
-          severity="error" 
+        <Alert
+          severity='error'
           action={
-            <Button color="inherit" size="small" onClick={handleRefresh}>
+            <Button color='inherit' size='small' onClick={handleRefresh}>
               Retry
             </Button>
           }
         >
-          Failed to load system health: {(error as { message?: string })?.message || 'Unknown error'}
+          Failed to load system health:{' '}
+          {(error as { message?: string })?.message || 'Unknown error'}
         </Alert>
       </Box>
     );
@@ -214,12 +219,10 @@ export const SystemHealthDashboard: React.FC = () => {
   if (!healthData) {
     return (
       <Box>
-        <Typography variant="h4" gutterBottom>
+        <Typography variant='h4' gutterBottom>
           System Health Monitor
         </Typography>
-        <Alert severity="warning">
-          No health data available.
-        </Alert>
+        <Alert severity='warning'>No health data available.</Alert>
       </Box>
     );
   }
@@ -228,13 +231,13 @@ export const SystemHealthDashboard: React.FC = () => {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
+      <Typography variant='h4' gutterBottom>
         System Health Monitor
       </Typography>
 
-      <Typography variant="body1" color="text.secondary" paragraph>
-        Real-time monitoring of system components and services. 
-        Updates automatically every 30 seconds.
+      <Typography variant='body1' color='text.secondary' paragraph>
+        Real-time monitoring of system components and services. Updates automatically every 30
+        seconds.
       </Typography>
 
       {/* Overall System Status */}
@@ -243,23 +246,31 @@ export const SystemHealthDashboard: React.FC = () => {
           avatar={getOverallStatusIcon(status)}
           title={
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Typography variant="h5">
+              <Typography variant='h5'>
                 System Status: {status.charAt(0).toUpperCase() + status.slice(1)}
               </Typography>
               <Chip
-                size="medium"
+                size='medium'
                 label={status.toUpperCase()}
-                color={getOverallStatusColor(status) as 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning'}
+                color={
+                  getOverallStatusColor(status) as
+                    | 'primary'
+                    | 'secondary'
+                    | 'error'
+                    | 'info'
+                    | 'success'
+                    | 'warning'
+                }
               />
             </Box>
           }
           action={
             <Button
-              variant="outlined"
+              variant='outlined'
               startIcon={<RefreshIcon />}
               onClick={handleRefresh}
               disabled={isLoading}
-              size="small"
+              size='small'
             >
               {isLoading ? 'Refreshing...' : 'Refresh'}
             </Button>
@@ -268,35 +279,29 @@ export const SystemHealthDashboard: React.FC = () => {
         <CardContent>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={4}>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant='body2' color='text.secondary'>
                 Version
               </Typography>
-              <Typography variant="body1">
-                {version}
-              </Typography>
+              <Typography variant='body1'>{version}</Typography>
             </Grid>
             <Grid item xs={12} sm={4}>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant='body2' color='text.secondary'>
                 Environment
               </Typography>
-              <Typography variant="body1">
-                {environment}
-              </Typography>
+              <Typography variant='body1'>{environment}</Typography>
             </Grid>
             <Grid item xs={12} sm={4}>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant='body2' color='text.secondary'>
                 Last Updated
               </Typography>
-              <Typography variant="body1">
-                {new Date(timestamp).toLocaleString()}
-              </Typography>
+              <Typography variant='body1'>{new Date(timestamp).toLocaleString()}</Typography>
             </Grid>
           </Grid>
         </CardContent>
       </Card>
 
       {/* Service Status Cards */}
-      <Typography variant="h6" gutterBottom>
+      <Typography variant='h6' gutterBottom>
         Service Health Status
       </Typography>
 
@@ -304,7 +309,7 @@ export const SystemHealthDashboard: React.FC = () => {
         {/* Database Service */}
         <Grid item xs={12} md={4}>
           <ServiceStatus
-            name="Database"
+            name='Database'
             status={services.database.status}
             type={services.database.type}
             responseTime={services.database.response_time_ms}
@@ -315,7 +320,7 @@ export const SystemHealthDashboard: React.FC = () => {
         {/* Storage Service */}
         <Grid item xs={12} md={4}>
           <ServiceStatus
-            name="Storage"
+            name='Storage'
             status={services.storage.status}
             type={services.storage.type}
             responseTime={services.storage.response_time_ms}
@@ -326,7 +331,7 @@ export const SystemHealthDashboard: React.FC = () => {
         {/* LLM Providers Service */}
         <Grid item xs={12} md={4}>
           <ServiceStatus
-            name="LLM Providers"
+            name='LLM Providers'
             status={services.llm_providers.status}
             message={services.llm_providers.message}
             note={services.llm_providers.note}
@@ -337,21 +342,16 @@ export const SystemHealthDashboard: React.FC = () => {
 
       {/* Additional Service Information */}
       <Card sx={{ mt: 3 }}>
-        <CardHeader title="LLM Provider Details" />
+        <CardHeader title='LLM Provider Details' />
         <CardContent>
           <Stack spacing={2}>
             <Box>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
+              <Typography variant='body2' color='text.secondary' gutterBottom>
                 Supported Providers
               </Typography>
               <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                {services.llm_providers.supported_providers.map((provider) => (
-                  <Chip
-                    key={provider}
-                    label={provider}
-                    size="small"
-                    variant="outlined"
-                  />
+                {services.llm_providers.supported_providers.map(provider => (
+                  <Chip key={provider} label={provider} size='small' variant='outlined' />
                 ))}
               </Box>
             </Box>
@@ -359,18 +359,14 @@ export const SystemHealthDashboard: React.FC = () => {
             <Divider />
 
             <Box>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
+              <Typography variant='body2' color='text.secondary' gutterBottom>
                 Operation Mode
               </Typography>
-              <Typography variant="body1">
-                {services.llm_providers.mode}
-              </Typography>
+              <Typography variant='body1'>{services.llm_providers.mode}</Typography>
             </Box>
 
             {services.llm_providers.note && (
-              <Alert severity="info" size="small">
-                {services.llm_providers.note}
-              </Alert>
+              <Alert severity='info'>{services.llm_providers.note}</Alert>
             )}
           </Stack>
         </CardContent>
@@ -378,7 +374,7 @@ export const SystemHealthDashboard: React.FC = () => {
 
       {/* Auto-refresh indicator */}
       <Box sx={{ mt: 2, textAlign: 'center' }}>
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant='caption' color='text.secondary'>
           Auto-refreshing every 30 seconds • Last refresh: {lastRefresh.toLocaleTimeString()}
         </Typography>
       </Box>

@@ -9,7 +9,8 @@ import type { AnalysisState } from '../slices/analysisSlice';
 import type { JobStatusType, JobPhaseType } from '../../types/analysis.types';
 
 // Helper to safely access analysis state (handles PersistPartial)
-const getAnalysisState = (state: RootState): AnalysisState => state.analysis as unknown as AnalysisState;
+const getAnalysisState = (state: RootState): AnalysisState =>
+  state.analysis as unknown as AnalysisState;
 
 // Base selectors
 export const selectAnalysisState = (state: RootState) => getAnalysisState(state);
@@ -21,15 +22,11 @@ export const selectIsLoading = (state: RootState) => getAnalysisState(state).isL
 export const selectError = (state: RootState) => getAnalysisState(state).error;
 
 // Active jobs selectors
-export const selectActiveJobsArray = createSelector(
-  [selectActiveJobs],
-  activeJobs => Object.values(activeJobs)
+export const selectActiveJobsArray = createSelector([selectActiveJobs], activeJobs =>
+  Object.values(activeJobs)
 );
 
-export const selectActiveJobsCount = createSelector(
-  [selectActiveJobsArray],
-  jobs => jobs.length
-);
+export const selectActiveJobsCount = createSelector([selectActiveJobsArray], jobs => jobs.length);
 
 export const selectJobById = (jobId: string) =>
   createSelector(
@@ -108,13 +105,14 @@ export const selectFilteredJobHistory = createSelector(
 // Polling selectors
 export const selectIsPolling = (state: RootState) => getAnalysisState(state).polling.isPolling;
 export const selectPollingInterval = (state: RootState) => getAnalysisState(state).polling.interval;
-export const selectJobsBeingPolled = (state: RootState) => getAnalysisState(state).polling.jobsBeingPolled;
+export const selectJobsBeingPolled = (state: RootState) =>
+  getAnalysisState(state).polling.jobsBeingPolled;
 
 export const selectShouldPoll = createSelector(
   [selectActiveJobsArray, selectIsPolling],
   (activeJobs, isPolling) => {
-    const hasProcessingJobs = activeJobs.some(job => 
-      job.status === 'processing' || job.status === 'pending'
+    const hasProcessingJobs = activeJobs.some(
+      job => job.status === 'processing' || job.status === 'queued'
     );
     return hasProcessingJobs && !isPolling;
   }
@@ -126,7 +124,7 @@ export const selectJobStats = createSelector(
   (activeJobs, history) => {
     const allJobs = [...activeJobs, ...history];
     const totalJobs = allJobs.length;
-    
+
     const statusCounts = allJobs.reduce(
       (acc, job) => {
         acc[job.status] = (acc[job.status] || 0) + 1;
@@ -175,7 +173,7 @@ export const selectCostByProvider = createSelector([selectJobHistory], history =
 // Progress tracking selectors
 export const selectOverallProgress = createSelector([selectActiveJobsArray], jobs => {
   if (jobs.length === 0) return 0;
-  
+
   const totalProgress = jobs.reduce((sum, job) => sum + job.progress, 0);
   return Math.round(totalProgress / jobs.length);
 });
@@ -192,10 +190,7 @@ export const selectRecentJobs = (limit = 5) =>
       .slice(0, limit)
   );
 
-export const selectHasActiveJobs = createSelector(
-  [selectActiveJobsCount],
-  count => count > 0
-);
+export const selectHasActiveJobs = createSelector([selectActiveJobsCount], count => count > 0);
 
 export const selectHasJobHistory = createSelector(
   [selectJobHistory],
@@ -203,7 +198,8 @@ export const selectHasJobHistory = createSelector(
 );
 
 // Error state selectors
-export const selectJobsWithErrors = createSelector([selectActiveJobsArray, selectJobHistory], 
+export const selectJobsWithErrors = createSelector(
+  [selectActiveJobsArray, selectJobHistory],
   (activeJobs, history) => {
     const allJobs = [...activeJobs, ...history];
     return allJobs.filter(job => job.status === 'failed' || job.error);

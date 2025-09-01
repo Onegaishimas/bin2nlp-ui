@@ -7,7 +7,6 @@ import {
   Box,
   Chip,
   Button,
-  Grid,
   IconButton,
   Alert,
   Dialog,
@@ -18,6 +17,7 @@ import {
   Stack,
   LinearProgress,
 } from '@mui/material';
+import { GridLegacy as Grid } from '@mui/material';
 import {
   Refresh as RefreshIcon,
   CheckCircle as HealthyIcon,
@@ -25,9 +25,9 @@ import {
   Help as UnknownIcon,
   PlayArrow as TestIcon,
 } from '@mui/icons-material';
-import { 
-  useGetLLMProvidersQuery, 
-  useTestLLMProviderMutation 
+import {
+  useGetLLMProvidersQuery,
+  useTestLLMProviderMutation,
 } from '../../services/api/analysisApi';
 import type { LLMProvider } from '../../services/api/analysisApi';
 
@@ -37,23 +37,19 @@ interface ProviderCardProps {
   isTestingProvider: string | null;
 }
 
-const ProviderCard: React.FC<ProviderCardProps> = ({ 
-  provider, 
-  onTest, 
-  isTestingProvider 
-}) => {
+const ProviderCard: React.FC<ProviderCardProps> = ({ provider, onTest, isTestingProvider }) => {
   const getStatusIcon = (status: LLMProvider['status']) => {
     switch (status) {
       case 'healthy':
-        return <HealthyIcon color="success" />;
+        return <HealthyIcon color='success' />;
       case 'unhealthy':
-        return <ErrorIcon color="error" />;
+        return <ErrorIcon color='error' />;
       case 'error':
-        return <ErrorIcon color="error" />;
+        return <ErrorIcon color='error' />;
       case 'unknown':
-        return <UnknownIcon color="disabled" />;
+        return <UnknownIcon color='disabled' />;
       default:
-        return <UnknownIcon color="disabled" />;
+        return <UnknownIcon color='disabled' />;
     }
   };
 
@@ -87,11 +83,19 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
         avatar={getStatusIcon(provider.status)}
         title={
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="h6">{provider.name}</Typography>
+            <Typography variant='h6'>{provider.name}</Typography>
             <Chip
-              size="small"
+              size='small'
               label={provider.status.toUpperCase()}
-              color={getStatusColor(provider.status) as 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning'}
+              color={
+                getStatusColor(provider.status) as
+                  | 'primary'
+                  | 'secondary'
+                  | 'error'
+                  | 'info'
+                  | 'success'
+                  | 'warning'
+              }
             />
           </Box>
         }
@@ -100,9 +104,9 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
           <IconButton
             onClick={() => onTest(provider.provider_id)}
             disabled={isTestingThisProvider}
-            color="primary"
+            color='primary'
           >
-            {isTestingThisProvider ? <RefreshIcon className="spin" /> : <TestIcon />}
+            {isTestingThisProvider ? <RefreshIcon className='spin' /> : <TestIcon />}
           </IconButton>
         }
       />
@@ -112,51 +116,52 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
           {provider.health_score !== null && (
             <Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant='body2' color='text.secondary'>
                   Health Score
                 </Typography>
-                <Typography variant="body2" color={getHealthScoreColor(provider.health_score)}>
+                <Typography variant='body2' color={getHealthScoreColor(provider.health_score)}>
                   {(provider.health_score * 100).toFixed(0)}%
                 </Typography>
               </Box>
               <LinearProgress
-                variant="determinate"
+                variant='determinate'
                 value={provider.health_score * 100}
-                color={provider.health_score >= 0.8 ? 'success' : provider.health_score >= 0.6 ? 'warning' : 'error'}
+                color={
+                  provider.health_score >= 0.8
+                    ? 'success'
+                    : provider.health_score >= 0.6
+                      ? 'warning'
+                      : 'error'
+                }
               />
             </Box>
           )}
 
           {/* Cost Information */}
           <Box>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
+            <Typography variant='body2' color='text.secondary' gutterBottom>
               Pricing
             </Typography>
-            <Typography variant="body1">
+            <Typography variant='body1'>
               ${provider.cost_per_1k_tokens.toFixed(4)} per 1K tokens
             </Typography>
           </Box>
 
           {/* Available Models */}
           <Box>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
+            <Typography variant='body2' color='text.secondary' gutterBottom>
               Available Models ({provider.available_models.length})
             </Typography>
             <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-              {provider.available_models.slice(0, 3).map((model) => (
-                <Chip
-                  key={model}
-                  label={model}
-                  size="small"
-                  variant="outlined"
-                />
+              {provider.available_models.slice(0, 3).map(model => (
+                <Chip key={model} label={model} size='small' variant='outlined' />
               ))}
               {provider.available_models.length > 3 && (
                 <Chip
                   label={`+${provider.available_models.length - 3} more`}
-                  size="small"
-                  variant="outlined"
-                  color="primary"
+                  size='small'
+                  variant='outlined'
+                  color='primary'
                 />
               )}
             </Box>
@@ -164,16 +169,16 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
 
           {/* Capabilities */}
           <Box>
-            <Typography variant="body2" color="text.secondary" gutterBottom>
+            <Typography variant='body2' color='text.secondary' gutterBottom>
               Capabilities
             </Typography>
             <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-              {provider.capabilities.map((capability) => (
+              {provider.capabilities.map(capability => (
                 <Chip
                   key={capability}
                   label={capability.replace(/_/g, ' ')}
-                  size="small"
-                  color="primary"
+                  size='small'
+                  color='primary'
                 />
               ))}
             </Box>
@@ -186,17 +191,14 @@ const ProviderCard: React.FC<ProviderCardProps> = ({
 
 export const LLMProviderDashboard: React.FC = () => {
   const [testingProvider, setTestingProvider] = useState<string | null>(null);
-  const [testResults, setTestResults] = useState<Record<string, { status: string; message: string }>>({});
+  const [testResults, setTestResults] = useState<
+    Record<string, { status: string; message: string }>
+  >({});
   const [showTestDialog, setShowTestDialog] = useState(false);
   const [testDialogProvider, setTestDialogProvider] = useState<LLMProvider | null>(null);
   const [testApiKey, setTestApiKey] = useState('');
 
-  const { 
-    data: providersData, 
-    isLoading, 
-    error, 
-    refetch 
-  } = useGetLLMProvidersQuery();
+  const { data: providersData, isLoading, error, refetch } = useGetLLMProvidersQuery();
 
   const [testProvider, { isLoading: isTestingConnection }] = useTestLLMProviderMutation();
 
@@ -245,7 +247,7 @@ export const LLMProviderDashboard: React.FC = () => {
   if (isLoading) {
     return (
       <Box>
-        <Typography variant="h4" gutterBottom>
+        <Typography variant='h4' gutterBottom>
           LLM Provider Management
         </Typography>
         <Card>
@@ -261,18 +263,19 @@ export const LLMProviderDashboard: React.FC = () => {
   if (error) {
     return (
       <Box>
-        <Typography variant="h4" gutterBottom>
+        <Typography variant='h4' gutterBottom>
           LLM Provider Management
         </Typography>
-        <Alert 
-          severity="error" 
+        <Alert
+          severity='error'
           action={
-            <Button color="inherit" size="small" onClick={() => refetch()}>
+            <Button color='inherit' size='small' onClick={() => refetch()}>
               Retry
             </Button>
           }
         >
-          Failed to load LLM providers: {(error as { message?: string })?.message || 'Unknown error'}
+          Failed to load LLM providers:{' '}
+          {(error as { message?: string })?.message || 'Unknown error'}
         </Alert>
       </Box>
     );
@@ -281,12 +284,10 @@ export const LLMProviderDashboard: React.FC = () => {
   if (!providersData) {
     return (
       <Box>
-        <Typography variant="h4" gutterBottom>
+        <Typography variant='h4' gutterBottom>
           LLM Provider Management
         </Typography>
-        <Alert severity="warning">
-          No provider data available.
-        </Alert>
+        <Alert severity='warning'>No provider data available.</Alert>
       </Box>
     );
   }
@@ -295,13 +296,13 @@ export const LLMProviderDashboard: React.FC = () => {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
+      <Typography variant='h4' gutterBottom>
         LLM Provider Management
       </Typography>
 
-      <Typography variant="body1" color="text.secondary" paragraph>
-        Manage and monitor LLM providers for AI-powered binary analysis translation.
-        Test connectivity and view real-time health status.
+      <Typography variant='body1' color='text.secondary' paragraph>
+        Manage and monitor LLM providers for AI-powered binary analysis translation. Test
+        connectivity and view real-time health status.
       </Typography>
 
       {/* Summary Statistics */}
@@ -309,10 +310,10 @@ export const LLMProviderDashboard: React.FC = () => {
         <Grid item xs={12} sm={4}>
           <Card>
             <CardContent>
-              <Typography variant="h3" color="primary.main">
+              <Typography variant='h3' color='primary.main'>
                 {providers.length}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant='body2' color='text.secondary'>
                 Total Providers
               </Typography>
             </CardContent>
@@ -321,10 +322,10 @@ export const LLMProviderDashboard: React.FC = () => {
         <Grid item xs={12} sm={4}>
           <Card>
             <CardContent>
-              <Typography variant="h3" color="success.main">
+              <Typography variant='h3' color='success.main'>
                 {total_healthy}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant='body2' color='text.secondary'>
                 Healthy Providers
               </Typography>
             </CardContent>
@@ -333,10 +334,10 @@ export const LLMProviderDashboard: React.FC = () => {
         <Grid item xs={12} sm={4}>
           <Card>
             <CardContent>
-              <Typography variant="h6" color="text.primary">
+              <Typography variant='h6' color='text.primary'>
                 {recommended_provider || 'None'}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant='body2' color='text.secondary'>
                 Recommended Provider
               </Typography>
             </CardContent>
@@ -346,18 +347,16 @@ export const LLMProviderDashboard: React.FC = () => {
 
       {/* Provider List */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h6">
-          Providers ({providers.length})
-        </Typography>
+        <Typography variant='h6'>Providers ({providers.length})</Typography>
         <Box>
-          <Typography variant="caption" color="text.secondary" sx={{ mr: 2 }}>
+          <Typography variant='caption' color='text.secondary' sx={{ mr: 2 }}>
             Last updated: {new Date(last_updated).toLocaleString()}
           </Typography>
           <Button
-            variant="outlined"
+            variant='outlined'
             startIcon={<RefreshIcon />}
             onClick={() => refetch()}
-            size="small"
+            size='small'
           >
             Refresh
           </Button>
@@ -365,22 +364,25 @@ export const LLMProviderDashboard: React.FC = () => {
       </Box>
 
       <Grid container spacing={3}>
-        {providers.map((provider) => (
+        {providers.map(provider => (
           <Grid item xs={12} md={6} lg={4} key={provider.provider_id}>
             <ProviderCard
               provider={provider}
               onTest={handleTestProvider}
               isTestingProvider={testingProvider}
             />
-            
+
             {/* Test Results */}
             {testResults[provider.provider_id] && (
-              <Alert 
-                severity={testResults[provider.provider_id].status === 'success' ? 'success' : 'error'}
+              <Alert
+                severity={
+                  testResults[provider.provider_id]?.status === 'success' ? 'success' : 'error'
+                }
                 sx={{ mt: 1 }}
               >
-                <Typography variant="body2">
-                  <strong>Test Result:</strong> {testResults[provider.provider_id].message}
+                <Typography variant='body2'>
+                  <strong>Test Result:</strong>{' '}
+                  {testResults[provider.provider_id]?.message || 'Unknown result'}
                 </Typography>
               </Alert>
             )}
@@ -389,35 +391,27 @@ export const LLMProviderDashboard: React.FC = () => {
       </Grid>
 
       {/* Test Connection Dialog */}
-      <Dialog open={showTestDialog} onClose={handleCloseTestDialog} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          Test Provider Connection: {testDialogProvider?.name}
-        </DialogTitle>
+      <Dialog open={showTestDialog} onClose={handleCloseTestDialog} maxWidth='sm' fullWidth>
+        <DialogTitle>Test Provider Connection: {testDialogProvider?.name}</DialogTitle>
         <DialogContent>
-          <Typography variant="body2" color="text.secondary" paragraph>
-            Test the connection to {testDialogProvider?.name} to verify it's working correctly.
-            This will make a simple API call to check connectivity and authentication.
+          <Typography variant='body2' color='text.secondary' paragraph>
+            Test the connection to {testDialogProvider?.name} to verify it's working correctly. This
+            will make a simple API call to check connectivity and authentication.
           </Typography>
 
           <TextField
             fullWidth
-            label="API Key (Optional)"
-            type="password"
+            label='API Key (Optional)'
+            type='password'
             value={testApiKey}
-            onChange={(e) => setTestApiKey(e.target.value)}
-            helperText="Provide API key for authenticated testing (not stored)"
+            onChange={e => setTestApiKey(e.target.value)}
+            helperText='Provide API key for authenticated testing (not stored)'
             sx={{ mt: 2 }}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseTestDialog}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleRunTest}
-            variant="contained"
-            disabled={isTestingConnection}
-          >
+          <Button onClick={handleCloseTestDialog}>Cancel</Button>
+          <Button onClick={handleRunTest} variant='contained' disabled={isTestingConnection}>
             {isTestingConnection ? 'Testing...' : 'Run Test'}
           </Button>
         </DialogActions>

@@ -77,8 +77,12 @@ export const JobConfigurationForm: React.FC<JobConfigurationFormProps> = ({
   onConfigChange,
   disabled = false,
 }) => {
-  const [analysisDepth, setAnalysisDepth] = useState<'basic' | 'standard' | 'comprehensive'>('standard');
-  const [translationDetail, setTranslationDetail] = useState<'basic' | 'standard' | 'detailed'>('standard');
+  const [analysisDepth, setAnalysisDepth] = useState<'basic' | 'standard' | 'comprehensive'>(
+    'standard'
+  );
+  const [translationDetail, setTranslationDetail] = useState<'basic' | 'standard' | 'detailed'>(
+    'standard'
+  );
   const [useLLM, setUseLLM] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState('');
   const [selectedModel, setSelectedModel] = useState('');
@@ -87,7 +91,18 @@ export const JobConfigurationForm: React.FC<JobConfigurationFormProps> = ({
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   // Fetch LLM providers
-  const { data: providersData, isLoading: providersLoading, error: providersError } = useGetLLMProvidersQuery();
+  const {
+    data: providersData,
+    isLoading: providersLoading,
+    error: providersError,
+  } = useGetLLMProvidersQuery();
+
+  // Auto-expand advanced options for Ollama
+  useEffect(() => {
+    if (selectedProvider === 'ollama') {
+      setShowAdvanced(true);
+    }
+  }, [selectedProvider]);
 
   // Update parent component when config changes
   useEffect(() => {
@@ -104,16 +119,27 @@ export const JobConfigurationForm: React.FC<JobConfigurationFormProps> = ({
     }
 
     onConfigChange(config);
-  }, [analysisDepth, translationDetail, useLLM, selectedProvider, selectedModel, apiKey, customEndpoint, onConfigChange]);
+  }, [
+    analysisDepth,
+    translationDetail,
+    useLLM,
+    selectedProvider,
+    selectedModel,
+    apiKey,
+    customEndpoint,
+    onConfigChange,
+  ]);
 
   const selectedDepthOption = ANALYSIS_DEPTH_OPTIONS.find(opt => opt.value === analysisDepth);
-  const selectedProvider = providersData?.providers.find(p => p.provider_id === selectedProvider);
+  const selectedProviderData = providersData?.providers.find(
+    p => p.provider_id === selectedProvider
+  );
 
   return (
     <Card>
-      <CardHeader 
-        title="Analysis Configuration" 
-        subheader="Configure how your binary will be analyzed"
+      <CardHeader
+        title='Analysis Configuration'
+        subheader='Configure how your binary will be analyzed'
       />
       <CardContent>
         <Stack spacing={3}>
@@ -122,17 +148,17 @@ export const JobConfigurationForm: React.FC<JobConfigurationFormProps> = ({
             <InputLabel>Analysis Depth</InputLabel>
             <Select
               value={analysisDepth}
-              label="Analysis Depth"
-              onChange={(e) => setAnalysisDepth(e.target.value as typeof analysisDepth)}
+              label='Analysis Depth'
+              onChange={e => setAnalysisDepth(e.target.value as typeof analysisDepth)}
               disabled={disabled}
             >
-              {ANALYSIS_DEPTH_OPTIONS.map((option) => (
+              {ANALYSIS_DEPTH_OPTIONS.map(option => (
                 <MenuItem key={option.value} value={option.value}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     {option.icon}
                     <Box>
-                      <Typography variant="body1">{option.label}</Typography>
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography variant='body1'>{option.label}</Typography>
+                      <Typography variant='caption' color='text.secondary'>
                         {option.description} • Est. {option.estimatedTime}
                       </Typography>
                     </Box>
@@ -143,9 +169,10 @@ export const JobConfigurationForm: React.FC<JobConfigurationFormProps> = ({
           </FormControl>
 
           {selectedDepthOption && (
-            <Alert severity="info">
-              <Typography variant="body2">
-                <strong>{selectedDepthOption.label} Analysis:</strong> {selectedDepthOption.description}
+            <Alert severity='info'>
+              <Typography variant='body2'>
+                <strong>{selectedDepthOption.label} Analysis:</strong>{' '}
+                {selectedDepthOption.description}
                 <br />
                 <strong>Estimated time:</strong> {selectedDepthOption.estimatedTime}
               </Typography>
@@ -159,14 +186,14 @@ export const JobConfigurationForm: React.FC<JobConfigurationFormProps> = ({
             control={
               <Switch
                 checked={useLLM}
-                onChange={(e) => setUseLLM(e.target.checked)}
+                onChange={e => setUseLLM(e.target.checked)}
                 disabled={disabled}
               />
             }
             label={
               <Box>
-                <Typography variant="body1">Enable AI Translation</Typography>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant='body1'>Enable AI Translation</Typography>
+                <Typography variant='caption' color='text.secondary'>
                   Use LLM to translate decompiled code into natural language explanations
                 </Typography>
               </Box>
@@ -180,15 +207,15 @@ export const JobConfigurationForm: React.FC<JobConfigurationFormProps> = ({
                 <InputLabel>Translation Detail Level</InputLabel>
                 <Select
                   value={translationDetail}
-                  label="Translation Detail Level"
-                  onChange={(e) => setTranslationDetail(e.target.value as typeof translationDetail)}
+                  label='Translation Detail Level'
+                  onChange={e => setTranslationDetail(e.target.value as typeof translationDetail)}
                   disabled={disabled}
                 >
-                  {TRANSLATION_DETAIL_OPTIONS.map((option) => (
+                  {TRANSLATION_DETAIL_OPTIONS.map(option => (
                     <MenuItem key={option.value} value={option.value}>
                       <Box>
-                        <Typography variant="body1">{option.label}</Typography>
-                        <Typography variant="caption" color="text.secondary">
+                        <Typography variant='body1'>{option.label}</Typography>
+                        <Typography variant='caption' color='text.secondary'>
                           {option.description}
                         </Typography>
                       </Box>
@@ -202,20 +229,20 @@ export const JobConfigurationForm: React.FC<JobConfigurationFormProps> = ({
                 <InputLabel>LLM Provider</InputLabel>
                 <Select
                   value={selectedProvider}
-                  label="LLM Provider"
-                  onChange={(e) => {
+                  label='LLM Provider'
+                  onChange={e => {
                     setSelectedProvider(e.target.value);
                     setSelectedModel(''); // Reset model selection
                   }}
                   disabled={disabled || providersLoading}
                 >
-                  {providersData?.providers.map((provider) => (
+                  {providersData?.providers.map(provider => (
                     <MenuItem key={provider.provider_id} value={provider.provider_id}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                        <Typography variant="body1">{provider.name}</Typography>
+                        <Typography variant='body1'>{provider.name}</Typography>
                         <Box sx={{ ml: 'auto' }}>
-                          <Chip 
-                            size="small" 
+                          <Chip
+                            size='small'
                             label={provider.status}
                             color={provider.status === 'healthy' ? 'success' : 'error'}
                           />
@@ -223,44 +250,73 @@ export const JobConfigurationForm: React.FC<JobConfigurationFormProps> = ({
                       </Box>
                     </MenuItem>
                   ))}
+                  <MenuItem value='ollama'>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+                      <Typography variant='body1'>Ollama (Local)</Typography>
+                      <Box sx={{ ml: 'auto' }}>
+                        <Chip size='small' label='manual' color='info' />
+                      </Box>
+                    </Box>
+                  </MenuItem>
                 </Select>
               </FormControl>
 
               {providersError && (
-                <Alert severity="error">
+                <Alert severity='error'>
                   Failed to load LLM providers. Please check system health.
                 </Alert>
               )}
 
               {/* Model Selection */}
-              {selectedProvider && (
+              {selectedProvider && selectedProvider !== 'ollama' && (
                 <FormControl fullWidth>
                   <InputLabel>Model</InputLabel>
                   <Select
                     value={selectedModel}
-                    label="Model"
-                    onChange={(e) => setSelectedModel(e.target.value)}
+                    label='Model'
+                    onChange={e => setSelectedModel(e.target.value)}
                     disabled={disabled}
                   >
-                    {selectedProvider?.available_models.map((model) => (
+                    {selectedProviderData?.available_models.map(model => (
                       <MenuItem key={model} value={model}>
-                        <Typography variant="body1">{model}</Typography>
+                        <Typography variant='body1'>{model}</Typography>
                       </MenuItem>
                     ))}
                   </Select>
                 </FormControl>
               )}
 
+              {/* Ollama Model Input */}
+              {selectedProvider === 'ollama' && (
+                <TextField
+                  fullWidth
+                  label='Ollama Model'
+                  value={selectedModel}
+                  onChange={e => setSelectedModel(e.target.value)}
+                  disabled={disabled}
+                  placeholder='e.g., llama2, codellama, mistral'
+                  helperText='Enter the name of your locally installed Ollama model'
+                />
+              )}
+
               {/* API Key */}
               <TextField
                 fullWidth
-                type="password"
-                label="API Key"
+                type='password'
+                label={selectedProvider === 'ollama' ? 'API Key (Optional)' : 'API Key'}
                 value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
+                onChange={e => setApiKey(e.target.value)}
                 disabled={disabled}
-                placeholder="Enter your LLM provider API key"
-                helperText="API key is stored only for this session and never persisted"
+                placeholder={
+                  selectedProvider === 'ollama'
+                    ? 'Leave empty for local Ollama'
+                    : 'Enter your LLM provider API key'
+                }
+                helperText={
+                  selectedProvider === 'ollama'
+                    ? 'API key not required for local Ollama installations'
+                    : 'API key is stored only for this session and never persisted'
+                }
               />
 
               {/* Advanced Options */}
@@ -269,35 +325,60 @@ export const JobConfigurationForm: React.FC<JobConfigurationFormProps> = ({
                   control={
                     <Switch
                       checked={showAdvanced}
-                      onChange={(e) => setShowAdvanced(e.target.checked)}
-                      size="small"
+                      onChange={e => setShowAdvanced(e.target.checked)}
+                      size='small'
                     />
                   }
-                  label="Advanced Options"
+                  label='Advanced Options'
                 />
 
                 <Collapse in={showAdvanced}>
                   <Box sx={{ mt: 2 }}>
                     <TextField
                       fullWidth
-                      label="Custom Endpoint URL"
+                      label={
+                        selectedProvider === 'ollama' ? 'Ollama Server URL' : 'Custom Endpoint URL'
+                      }
                       value={customEndpoint}
-                      onChange={(e) => setCustomEndpoint(e.target.value)}
+                      onChange={e => setCustomEndpoint(e.target.value)}
                       disabled={disabled}
-                      placeholder="https://api.custom-llm.com/v1"
-                      helperText="Override the default API endpoint (optional)"
+                      placeholder={
+                        selectedProvider === 'ollama'
+                          ? 'http://localhost:11434'
+                          : 'https://api.custom-llm.com/v1'
+                      }
+                      helperText={
+                        selectedProvider === 'ollama'
+                          ? 'URL of your Ollama server (default: http://localhost:11434)'
+                          : 'Override the default API endpoint (optional)'
+                      }
                     />
                   </Box>
                 </Collapse>
               </Box>
 
               {/* Cost Estimation */}
-              {selectedProvider && (
-                <Alert severity="info">
-                  <Typography variant="body2">
-                    <strong>Estimated Cost:</strong> ~${selectedProvider.cost_per_1k_tokens.toFixed(4)} per 1K tokens
+              {selectedProviderData && (
+                <Alert severity='info'>
+                  <Typography variant='body2'>
+                    <strong>Estimated Cost:</strong> ~$
+                    {selectedProviderData.cost_per_1k_tokens.toFixed(4)} per 1K tokens
                     <br />
-                    <strong>Capabilities:</strong> {selectedProvider.capabilities.join(', ')}
+                    <strong>Capabilities:</strong> {selectedProviderData.capabilities.join(', ')}
+                  </Typography>
+                </Alert>
+              )}
+
+              {/* Ollama Information */}
+              {selectedProvider === 'ollama' && (
+                <Alert severity='info'>
+                  <Typography variant='body2'>
+                    <strong>Ollama Configuration:</strong> Local LLM provider with no usage costs
+                    <br />
+                    <strong>Requirements:</strong> Ensure Ollama is running and the model is
+                    installed locally
+                    <br />
+                    <strong>Default URL:</strong> http://localhost:11434
                   </Typography>
                 </Alert>
               )}

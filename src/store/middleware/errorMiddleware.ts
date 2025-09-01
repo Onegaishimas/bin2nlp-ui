@@ -13,7 +13,9 @@ export const errorMiddleware: Middleware = (_api: MiddlewareAPI) => next => acti
     console.error('API Error:', {
       endpoint: (meta?.arg as { endpointName?: string })?.endpointName || 'unknown',
       status: (error as { status?: unknown })?.status,
-      message: (error as { data?: { message?: string }; message?: string })?.data?.message || (error as Error)?.message,
+      message:
+        (error as { data?: { message?: string }; message?: string })?.data?.message ||
+        (error as Error)?.message,
       originalArgs: (meta?.arg as { originalArgs?: unknown })?.originalArgs,
     });
 

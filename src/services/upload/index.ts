@@ -1,7 +1,7 @@
 export { fileUploadService } from './fileUploadService';
-export type { 
-  FileUploadService, 
-  FileValidationResult, 
-  UploadProgress, 
-  UploadConfig 
+export type {
+  FileUploadService,
+  FileValidationResult,
+  UploadProgress,
+  UploadConfig,
 } from './fileUploadService';

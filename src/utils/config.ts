@@ -14,12 +14,8 @@ export interface AppConfig {
  * Get environment variable value with fallback
  */
 const getEnvVar = (key: string, fallback: string): string => {
-  // Browser environment
-  if (typeof window !== 'undefined' && (window as { import?: { meta?: { env?: Record<string, string> } } }).import?.meta?.env) {
-    return (window as { import?: { meta?: { env?: Record<string, string> } } }).import.meta.env[key] || fallback;
-  }
-  // Node.js environment (for tests)
-  return process.env[key] || fallback;
+  // Use Vite's import.meta.env for environment variables
+  return import.meta.env[key] || fallback;
 };
 
 /**
@@ -36,12 +32,12 @@ export const config: AppConfig = {
  * Check if we're in development mode
  */
 export const isDevelopment = (): boolean => {
-  return getEnvVar('MODE', 'development') === 'development';
+  return import.meta.env.MODE === 'development';
 };
 
 /**
  * Check if we're in production mode
  */
 export const isProduction = (): boolean => {
-  return getEnvVar('MODE', 'development') === 'production';
+  return import.meta.env.MODE === 'production';
 };
