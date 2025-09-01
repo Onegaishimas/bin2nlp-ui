@@ -189,7 +189,7 @@ The Multi-Provider LLM Integration follows a layered abstraction architecture in
   "@types/react": "^18.2.15",
   "@types/uuid": "^9.0.4",
   "msw": "^1.3.0",
-  "@testing-library/react": "^13.4.0"
+  "playwright": "^1.40.0"
 }
 ```
 
@@ -1906,7 +1906,7 @@ describe('LLMProvidersSlice', () => {
 // Security Testing for Credential Handling
 describe('SecureProviderAuthManager', () => {
   let authManager: SecureProviderAuthManager;
-  let mockEncryptionService: jest.Mocked<CredentialEncryptionService>;
+  let mockEncryptionService: Mocked<CredentialEncryptionService>; // Using vi.mock types
   
   beforeEach(() => {
     mockEncryptionService = createMockEncryptionService();
@@ -2002,10 +2002,10 @@ export const mockProviderServices = {
   
   createProviderAdapter: (providerId: ProviderId): MockProviderAdapter => ({
     providerId,
-    validate: jest.fn().mockResolvedValue({ isValid: true }),
-    listModels: jest.fn().mockResolvedValue(mockModels[providerId]),
-    testConnection: jest.fn().mockResolvedValue({ success: true }),
-    execute: jest.fn().mockResolvedValue({ result: 'mock response' }),
+    validate: vi.fn().mockResolvedValue({ isValid: true }),
+    listModels: vi.fn().mockResolvedValue(mockModels[providerId]),
+    testConnection: vi.fn().mockResolvedValue({ success: true }),
+    execute: vi.fn().mockResolvedValue({ result: 'mock response' }),
   }),
   
   createFailoverScenario: (

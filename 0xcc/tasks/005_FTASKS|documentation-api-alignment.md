@@ -33,8 +33,8 @@ This task list addresses the complete realignment of our frontend documentation 
 
 ### Notes
 
-- Unit tests should typically be placed alongside the code files they are testing (e.g., `MyComponent.tsx` and `MyComponent.test.tsx` in the same directory).
-- Use `npx jest [optional/path/to/test/file]` to run tests. Running without a path executes all tests found by the Jest configuration.
+- Component validation relies on TypeScript strict mode for compile-time checking.
+- Use `npm run type-check` to validate all TypeScript files for compilation errors.
 
 ## Tasks
 

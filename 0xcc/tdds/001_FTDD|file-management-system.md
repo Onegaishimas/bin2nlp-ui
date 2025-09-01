@@ -138,9 +138,8 @@ The Analysis Job Management System provides a comprehensive interface for job su
 - **lodash/debounce** for efficient polling interval management
 
 **Development and Testing:**
-- **Jest 29+** for unit testing
-- **React Testing Library** for component testing
-- **MSW (Mock Service Worker)** for API mocking in tests
+- **TypeScript strict mode** for compile-time validation
+- **MSW (Mock Service Worker)** for API mocking during development
 
 ### Justification for Technology Choices
 
@@ -1243,7 +1242,7 @@ describe('Job Submission Integration', () => {
 ```typescript
 describe('JobSubmissionPanel', () => {
   it('should submit job with correct data', async () => {
-    const mockOnSubmit = jest.fn();
+    const mockOnSubmit = vi.fn(); // Using Vitest for any needed mock functions
     const mockFile = createMockFile('test.exe');
     
     render(<JobSubmissionPanel onSubmit={mockOnSubmit} />);

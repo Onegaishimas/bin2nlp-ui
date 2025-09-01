@@ -1503,11 +1503,11 @@ describe('AnalysisConfigurationInterface', () => {
   const mockFile = new File(['test content'], 'test.exe', {
     type: 'application/x-executable',
   });
-  const mockOnJobSubmit = jest.fn();
-  const mockOnCancel = jest.fn();
+  const mockOnJobSubmit = vi.fn();
+  const mockOnCancel = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Basic Functionality', () => {

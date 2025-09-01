@@ -2108,10 +2108,10 @@ const TestWrapper: React.FC<{ children: React.ReactNode; store?: any }> = ({
   const testStore = store || createTestStore();
   
   // Mock ResizeObserver
-  global.ResizeObserver = jest.fn().mockImplementation(() => ({
-    observe: jest.fn(),
-    unobserve: jest.fn(),
-    disconnect: jest.fn(),
+  global.ResizeObserver = vi.fn().mockImplementation(() => ({
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
   }));
   
   return <Provider store={testStore}>{children}</Provider>;
@@ -2119,14 +2119,14 @@ const TestWrapper: React.FC<{ children: React.ReactNode; store?: any }> = ({
 
 describe('ResultsExplorer - Large Dataset Performance', () => {
   const mockJobId = 'test-job-123';
-  const mockOnNavigateBack = jest.fn();
+  const mockOnNavigateBack = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     
     // Mock virtual scrolling
-    jest.mock('react-window', () => ({
-      VariableSizeList: jest.fn(({ children, itemCount, itemSize, ...props }) => (
+    vi.mock('react-window', () => ({
+      VariableSizeList: vi.fn(({ children, itemCount, itemSize, ...props }) => (
         <div data-testid="virtual-list" {...props}>
           {Array.from({ length: Math.min(itemCount, 20) }, (_, index) => 
             children({ index, style: {} })

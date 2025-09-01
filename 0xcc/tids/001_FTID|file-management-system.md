@@ -322,7 +322,7 @@ export const config = {
 **Build Integration:**
 - Vite configuration for TypeScript path mapping
 - ESLint configuration for import order enforcement
-- Jest configuration for domain-based test organization
+- Vitest configuration for domain-based test organization
 - Bundle analyzer integration for performance monitoring
 
 ## Component Implementation Hints
@@ -2969,10 +2969,10 @@ export class CacheMaintenanceService {
 
 **Testing Architecture:**
 ```typescript
-// Jest configuration for domain-based testing
-// jest.config.js
+// Vitest configuration for domain-based testing
+// vitest.config.js
 module.exports = {
-  preset: 'ts-jest',
+  test: { environment: 'jsdom' },
   testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['<rootDir>/src/test/setup.ts'],
   moduleNameMapping: {
@@ -3015,7 +3015,7 @@ module.exports = {
 
 // Test setup file
 // src/test/setup.ts
-import '@testing-library/jest-dom';
+import '@testing-library/dom';
 import { configure } from '@testing-library/react';
 import { server } from './msw/server';
 
@@ -3028,31 +3028,31 @@ afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
 // Mock IntersectionObserver
-global.IntersectionObserver = jest.fn().mockImplementation(() => ({
-  observe: jest.fn(),
-  unobserve: jest.fn(),
-  disconnect: jest.fn(),
+global.IntersectionObserver = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
 }));
 
 // Mock ResizeObserver
-global.ResizeObserver = jest.fn().mockImplementation(() => ({
-  observe: jest.fn(),
-  unobserve: jest.fn(),
-  disconnect: jest.fn(),
+global.ResizeObserver = vi.fn().mockImplementation(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
 }));
 
 // Mock Web APIs
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: jest.fn().mockImplementation(query => ({
+  value: vi.fn().mockImplementation(query => ({
     matches: false,
     media: query,
     onchange: null,
-    addListener: jest.fn(),
-    removeListener: jest.fn(),
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
   })),
 });
 ```
@@ -3403,11 +3403,11 @@ export const createJobWithStatusHandler = (jobId: string, status: JobStatus) =>
 // Component testing example
 // src/analysis/components/JobSubmissionPanel/JobSubmissionPanel.test.tsx
 describe('JobSubmissionPanel', () => {
-  const mockOnSubmit = jest.fn();
-  const mockOnError = jest.fn();
+  const mockOnSubmit = vi.fn();
+  const mockOnError = vi.fn();
   
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
   
   const renderJobSubmissionPanel = (props: Partial<JobSubmissionPanelProps> = {}) => {

@@ -2282,12 +2282,12 @@ import { CredentialManager } from '../services/CredentialManager';
 // Mock Web Crypto API
 const mockWebCrypto = {
   subtle: {
-    generateKey: jest.fn(),
-    importKey: jest.fn(),
-    encrypt: jest.fn(),
-    decrypt: jest.fn(),
+    generateKey: vi.fn(),
+    importKey: vi.fn(),
+    encrypt: vi.fn(),
+    decrypt: vi.fn(),
   },
-  getRandomValues: jest.fn((array) => {
+  getRandomValues: vi.fn((array) => {
     for (let i = 0; i < array.length; i++) {
       array[i] = Math.floor(Math.random() * 256);
     }
@@ -2428,7 +2428,7 @@ const TestWrapper: React.FC<{ children: React.ReactNode; store?: any }> = ({
 
 describe('ProviderManager - Multi-Provider Integration', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     
     // Mock crypto operations
     mockWebCrypto.subtle.importKey.mockResolvedValue('mock-key');
@@ -2779,7 +2779,7 @@ describe('ProviderManager - Multi-Provider Integration', () => {
 
     it('should handle failover execution', async () => {
       const mockFailoverCoordinator = {
-        executeFailover: jest.fn().mockResolvedValue({
+        executeFailover: vi.fn().mockResolvedValue({
           success: true,
           newProvider: 'anthropic',
           reason: 'Primary provider health check failed',
@@ -2846,7 +2846,7 @@ describe('ProviderManager - Multi-Provider Integration', () => {
 
   describe('Embedded Mode Integration', () => {
     it('should work in embedded mode for job configuration', async () => {
-      const mockOnProviderChange = jest.fn();
+      const mockOnProviderChange = vi.fn();
       
       render(
         <TestWrapper>
@@ -2873,7 +2873,7 @@ describe('ProviderManager - Multi-Provider Integration', () => {
 
     it('should integrate with job submission workflow', async () => {
       const user = userEvent.setup();
-      const mockOnProviderChange = jest.fn();
+      const mockOnProviderChange = vi.fn();
       
       render(
         <TestWrapper>

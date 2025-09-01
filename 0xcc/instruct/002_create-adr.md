@@ -68,7 +68,7 @@ The AI should present technology options with pros/cons for each decision area:
   - E) Third-party service (Auth0, Firebase Auth, AWS Cognito)
 
 * **Testing Strategy:** "What testing approach should be prioritized?"
-  - A) Unit testing focus (Jest, pytest, fast feedback)
+  - A) Type checking focus (TypeScript strict mode, fast feedback)
   - B) Integration testing focus (API testing, database interactions)
   - C) End-to-end testing (Cypress, Playwright, user workflows)
   - D) Balanced testing pyramid (all levels with emphasis on unit)

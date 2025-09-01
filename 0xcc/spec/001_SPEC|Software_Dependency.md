@@ -260,10 +260,10 @@ This document provides a comprehensive inventory of all software dependencies, f
   - **Usage**: Unit testing, integration testing, test automation
   - **Criticality**: Essential
 
-- **Jest** - JavaScript testing framework
-  - **Sources**: Task generation files (generate-tasks.md)
-  - **Usage**: Frontend testing, JavaScript unit tests
-  - **Criticality**: High (if using JavaScript frontend)
+- **TypeScript Strict Mode** - Compile-time validation framework
+  - **Sources**: Architecture Decision Record, project configuration files
+  - **Usage**: Frontend validation, type safety enforcement, compile-time error detection
+  - **Criticality**: High (essential for TypeScript projects)
 
 ---
 

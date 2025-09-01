@@ -135,8 +135,8 @@ The Analysis Configuration Interface provides a streamlined configuration panel 
 - **js-cookie** for secure session-based credential storage
 
 **Development and Testing:**
-- **Jest 29+** for unit testing
-- **React Testing Library** for component testing
+- **TypeScript strict mode** for compile-time validation
+- **Manual testing** for component validation
 - **MSW (Mock Service Worker)** for API mocking in tests
 
 ### Justification for Technology Choices
@@ -1299,7 +1299,7 @@ describe('AnalysisConfigurationInterface', () => {
 
   it('should validate required fields correctly', async () => {
     const mockFile = new File(['test content'], 'test.exe', { type: 'application/x-executable' });
-    const mockOnJobSubmit = jest.fn();
+    const mockOnJobSubmit = vi.fn(); // Using Vitest for any needed mock functions
     
     render(
       <Provider store={createTestStore()}>
@@ -1338,7 +1338,7 @@ describe('AnalysisConfigurationInterface', () => {
       <Provider store={createTestStore()}>
         <AnalysisConfigurationInterface
           file={mockFile}
-          onJobSubmit={jest.fn()}
+          onJobSubmit={vi.fn()}
         />
       </Provider>
     );

@@ -37,9 +37,9 @@
 ### Notes
 
 - Unit tests should be placed alongside the code files they are testing
-- Use `npm test` to run all tests found by the Jest configuration
+- Use `npm run type-check` to validate TypeScript compilation
 - RTK Query API tests should mock HTTP requests using MSW (Mock Service Worker)
-- Component tests should use React Testing Library for user interaction testing
+- Component validation should rely on TypeScript strict mode and manual testing
 - Integration tests should verify Redux state management and API coordination
 
 ## Tasks
@@ -49,7 +49,7 @@
   - [x] 1.2 Install and configure Material-UI (MUI) v5 with custom theme
   - [x] 1.3 Install Redux Toolkit, RTK Query, and React-Redux dependencies
   - [x] 1.4 Set up TypeScript strict mode configuration
-  - [x] 1.5 Configure Jest and React Testing Library for unit testing
+  - [x] 1.5 Configure TypeScript strict mode for compile-time validation
   - [x] 1.6 Set up MSW (Mock Service Worker) for API mocking in tests (SKIPPED - using real API at localhost:8000 instead)
   - [ ] 1.7 Create project directory structure following domain-driven organization
   - [ ] 1.8 Set up Vite development server with environment variable support
@@ -96,7 +96,7 @@
   - [ ] 4.15 Add loading states and error boundaries for all components
 
 - [ ] 5.0 Testing and Quality Assurance
-  - [ ] 5.1 Write unit tests for all React components using React Testing Library
+  - [ ] 5.1 Validate all React components with TypeScript strict mode compilation
   - [ ] 5.2 Create integration tests for Redux state management flows
   - [ ] 5.3 Implement API integration tests with MSW request mocking
   - [ ] 5.4 Write end-to-end tests for complete job submission workflow

@@ -180,7 +180,7 @@ The Results Exploration Platform follows a performance-optimized layered archite
   "@types/react-window": "^1.8.5",
   "@types/react-syntax-highlighter": "^15.5.7",
   "eslint-plugin-react-hooks": "^4.6.0",
-  "@testing-library/react": "^13.4.0"
+  "playwright": "^1.40.0"
 }
 ```
 

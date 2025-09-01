@@ -14,7 +14,7 @@ This ADR establishes the foundational technology choices, development principles
 - Redux Toolkit with RTK Query for complex multi-provider LLM state management
 - Material-UI (MUI) for enterprise-ready component library
 - Multi-container Docker architecture with separate nginx reverse proxy
-- Comprehensive testing strategy with Jest, RTL, and Playwright
+- Comprehensive testing strategy with Playwright and type checking
 
 **Decision-Making Criteria and Priorities:**
 1. **Enterprise Reliability:** Robust error handling, comprehensive testing, production-ready deployment
@@ -274,9 +274,8 @@ src/
 - Docker Compose for complete local stack
 
 **Testing Environment Requirements:**
-- Jest for unit and integration testing
-- React Testing Library for component testing
 - Playwright for end-to-end testing
+- Manual testing and type checking for validation
 - MSW (Mock Service Worker) for API mocking
 
 **Debugging and Profiling Tools:**

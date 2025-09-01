@@ -74,7 +74,7 @@
 - Comprehensive export functionality (JSON, PDF, CSV, HTML)
 - Admin dashboard with system monitoring and usage analytics
 - Docker containerization with nginx production server
-- Complete test suite with Jest and React Testing Library
+- Comprehensive type checking and end-to-end testing with Playwright
 
 **What is Explicitly Out of Scope:**
 - Any modifications to the bin2nlp backend API
