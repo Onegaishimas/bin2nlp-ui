@@ -16,6 +16,8 @@ import {
   TextField,
   Stack,
   LinearProgress,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import { GridLegacy as Grid } from '@mui/material';
 import {
@@ -30,6 +32,7 @@ import {
   useTestLLMProviderMutation,
 } from '../../services/api/analysisApi';
 import type { LLMProvider } from '../../services/api/analysisApi';
+import { UserProviderManagementPanel } from './UserProviderManagementPanel';
 
 interface ProviderCardProps {
   provider: LLMProvider;
@@ -189,7 +192,120 @@ const ProviderCard: React.FC<ProviderCardProps> = ({ provider, onTest, isTesting
   );
 };
 
+interface SystemProvidersTabProps {
+  providersData: any;
+  testingProvider: string | null;
+  testResults: Record<string, { status: string; message: string }>;
+  onTestProvider: (providerId: string) => void;
+  onRefetch: () => void;
+}
+
+const SystemProvidersTab: React.FC<SystemProvidersTabProps> = ({
+  providersData,
+  testingProvider,
+  testResults,
+  onTestProvider,
+  onRefetch,
+}) => {
+  const { providers, recommended_provider, total_healthy, last_updated } = providersData;
+
+  return (
+    <Box>
+      <Typography variant='body1' color='text.secondary' paragraph>
+        Monitor system-configured LLM providers for AI-powered binary analysis translation. 
+        Test connectivity and view real-time health status.
+      </Typography>
+
+      {/* Summary Statistics */}
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Grid item xs={12} sm={4}>
+          <Card>
+            <CardContent>
+              <Typography variant='h3' color='primary.main'>
+                {providers.length}
+              </Typography>
+              <Typography variant='body2' color='text.secondary'>
+                Total Providers
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <Card>
+            <CardContent>
+              <Typography variant='h3' color='success.main'>
+                {total_healthy}
+              </Typography>
+              <Typography variant='body2' color='text.secondary'>
+                Healthy Providers
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <Card>
+            <CardContent>
+              <Typography variant='h6' color='text.primary'>
+                {recommended_provider || 'None'}
+              </Typography>
+              <Typography variant='body2' color='text.secondary'>
+                Recommended Provider
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Provider List */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Typography variant='h6'>Providers ({providers.length})</Typography>
+        <Box>
+          <Typography variant='caption' color='text.secondary' sx={{ mr: 2 }}>
+            Last updated: {new Date(last_updated).toLocaleString()}
+          </Typography>
+          <Button
+            variant='outlined'
+            startIcon={<RefreshIcon />}
+            onClick={onRefetch}
+            size='small'
+          >
+            Refresh
+          </Button>
+        </Box>
+      </Box>
+
+      <Grid container spacing={3}>
+        {providers.map((provider: LLMProvider) => (
+          <Grid item xs={12} md={6} lg={4} key={provider.provider_id}>
+            <ProviderCard
+              provider={provider}
+              onTest={onTestProvider}
+              isTestingProvider={testingProvider}
+            />
+
+            {/* Test Results */}
+            {testResults[provider.provider_id] && (
+              <Alert
+                severity={
+                  testResults[provider.provider_id]?.status === 'success' ? 'success' : 'error'
+                }
+                sx={{ mt: 1 }}
+              >
+                <Typography variant='body2'>
+                  <strong>Test Result:</strong>{' '}
+                  {testResults[provider.provider_id]?.message || 'Unknown result'}
+                </Typography>
+              </Alert>
+            )}
+          </Grid>
+        ))}
+      </Grid>
+    </Box>
+  );
+};
+
 export const LLMProviderDashboard: React.FC = () => {
+  const [activeTab, setActiveTab] = useState(0);
   const [testingProvider, setTestingProvider] = useState<string | null>(null);
   const [testResults, setTestResults] = useState<
     Record<string, { status: string; message: string }>
@@ -202,8 +318,12 @@ export const LLMProviderDashboard: React.FC = () => {
 
   const [testProvider, { isLoading: isTestingConnection }] = useTestLLMProviderMutation();
 
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+    setActiveTab(newValue);
+  };
+
   const handleTestProvider = async (providerId: string) => {
-    const provider = providersData?.providers.find(p => p.provider_id === providerId);
+    const provider = providersData?.providers.find((p: LLMProvider) => p.provider_id === providerId);
     if (!provider) return;
 
     setTestDialogProvider(provider);
@@ -292,130 +412,63 @@ export const LLMProviderDashboard: React.FC = () => {
     );
   }
 
-  const { providers, recommended_provider, total_healthy, last_updated } = providersData;
-
   return (
     <Box>
-      <Typography variant='h4' gutterBottom>
+      <Typography variant="h4" gutterBottom>
         LLM Provider Management
       </Typography>
 
-      <Typography variant='body1' color='text.secondary' paragraph>
-        Manage and monitor LLM providers for AI-powered binary analysis translation. Test
-        connectivity and view real-time health status.
+      <Typography variant="body1" color="text.secondary" paragraph>
+        Manage LLM providers for AI-powered binary analysis translation. Configure your own providers 
+        or monitor system-configured ones.
       </Typography>
 
-      {/* Summary Statistics */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={4}>
-          <Card>
-            <CardContent>
-              <Typography variant='h3' color='primary.main'>
-                {providers.length}
-              </Typography>
-              <Typography variant='body2' color='text.secondary'>
-                Total Providers
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <Card>
-            <CardContent>
-              <Typography variant='h3' color='success.main'>
-                {total_healthy}
-              </Typography>
-              <Typography variant='body2' color='text.secondary'>
-                Healthy Providers
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <Card>
-            <CardContent>
-              <Typography variant='h6' color='text.primary'>
-                {recommended_provider || 'None'}
-              </Typography>
-              <Typography variant='body2' color='text.secondary'>
-                Recommended Provider
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
-      {/* Provider List */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant='h6'>Providers ({providers.length})</Typography>
-        <Box>
-          <Typography variant='caption' color='text.secondary' sx={{ mr: 2 }}>
-            Last updated: {new Date(last_updated).toLocaleString()}
-          </Typography>
-          <Button
-            variant='outlined'
-            startIcon={<RefreshIcon />}
-            onClick={() => refetch()}
-            size='small'
-          >
-            Refresh
-          </Button>
-        </Box>
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+        <Tabs value={activeTab} onChange={handleTabChange}>
+          <Tab label="Your Providers" />
+          <Tab label="System Providers" />
+        </Tabs>
       </Box>
 
-      <Grid container spacing={3}>
-        {providers.map(provider => (
-          <Grid item xs={12} md={6} lg={4} key={provider.provider_id}>
-            <ProviderCard
-              provider={provider}
-              onTest={handleTestProvider}
-              isTestingProvider={testingProvider}
+      {activeTab === 0 && <UserProviderManagementPanel />}
+      {activeTab === 1 && (
+        <SystemProvidersTab
+          providersData={providersData}
+          testingProvider={testingProvider}
+          testResults={testResults}
+          onTestProvider={handleTestProvider}
+          onRefetch={refetch}
+        />
+      )}
+
+      {/* Test Connection Dialog - only for system providers */}
+      {activeTab === 1 && (
+        <Dialog open={showTestDialog} onClose={handleCloseTestDialog} maxWidth='sm' fullWidth>
+          <DialogTitle>Test Provider Connection: {testDialogProvider?.name}</DialogTitle>
+          <DialogContent>
+            <Typography variant='body2' color='text.secondary' paragraph>
+              Test the connection to {testDialogProvider?.name} to verify it's working correctly. This
+              will make a simple API call to check connectivity and authentication.
+            </Typography>
+
+            <TextField
+              fullWidth
+              label='API Key (Optional)'
+              type='password'
+              value={testApiKey}
+              onChange={e => setTestApiKey(e.target.value)}
+              helperText='Provide API key for authenticated testing (not stored)'
+              sx={{ mt: 2 }}
             />
-
-            {/* Test Results */}
-            {testResults[provider.provider_id] && (
-              <Alert
-                severity={
-                  testResults[provider.provider_id]?.status === 'success' ? 'success' : 'error'
-                }
-                sx={{ mt: 1 }}
-              >
-                <Typography variant='body2'>
-                  <strong>Test Result:</strong>{' '}
-                  {testResults[provider.provider_id]?.message || 'Unknown result'}
-                </Typography>
-              </Alert>
-            )}
-          </Grid>
-        ))}
-      </Grid>
-
-      {/* Test Connection Dialog */}
-      <Dialog open={showTestDialog} onClose={handleCloseTestDialog} maxWidth='sm' fullWidth>
-        <DialogTitle>Test Provider Connection: {testDialogProvider?.name}</DialogTitle>
-        <DialogContent>
-          <Typography variant='body2' color='text.secondary' paragraph>
-            Test the connection to {testDialogProvider?.name} to verify it's working correctly. This
-            will make a simple API call to check connectivity and authentication.
-          </Typography>
-
-          <TextField
-            fullWidth
-            label='API Key (Optional)'
-            type='password'
-            value={testApiKey}
-            onChange={e => setTestApiKey(e.target.value)}
-            helperText='Provide API key for authenticated testing (not stored)'
-            sx={{ mt: 2 }}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseTestDialog}>Cancel</Button>
-          <Button onClick={handleRunTest} variant='contained' disabled={isTestingConnection}>
-            {isTestingConnection ? 'Testing...' : 'Run Test'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseTestDialog}>Cancel</Button>
+            <Button onClick={handleRunTest} variant='contained' disabled={isTestingConnection}>
+              {isTestingConnection ? 'Testing...' : 'Run Test'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      )}
     </Box>
   );
 };

@@ -47,6 +47,16 @@ export interface JobStatusResponse {
     string_count: number;
     duration_seconds: number;
     decompilation_id: string;
+    llm_translations?: {
+      provider: string;
+      translation_time: string;
+      functions: Array<{
+        function_name: string;
+        description: string;
+        confidence: number;
+        parameters?: string[];
+      }>;
+    };
   };
   message: string;
   // Computed fields added by transformResponse
@@ -63,6 +73,50 @@ export interface LLMProvider {
   cost_per_1k_tokens: number;
   capabilities: string[];
   health_score: number | null;
+}
+
+// User-configurable LLM provider types
+export interface UserLLMProvider {
+  id: string;
+  name: string;
+  provider_type: 'openai' | 'anthropic' | 'gemini' | 'ollama';
+  endpoint_url?: string;
+  config_json: Record<string, any>;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserLLMProviderCreate {
+  name: string;
+  provider_type: 'openai' | 'anthropic' | 'gemini' | 'ollama';
+  api_key: string;
+  endpoint_url?: string;
+  config_json?: Record<string, any>;
+}
+
+export interface UserLLMProviderUpdate {
+  name?: string;
+  api_key?: string;
+  endpoint_url?: string;
+  config_json?: Record<string, any>;
+  is_active?: boolean;
+}
+
+export interface ProviderType {
+  type: string;
+  name: string;
+  description: string;
+  requires_endpoint: boolean;
+  supports_streaming: boolean;
+  config_fields: Record<string, any>;
+}
+
+export interface UserProviderTestResult {
+  success: boolean;
+  message: string;
+  latency_ms?: number;
+  provider_info?: Record<string, any>;
 }
 
 // Enhanced error handling types
@@ -166,7 +220,7 @@ const baseQueryWithRetry = retry(baseQueryWithLogging, {
 export const analysisApi = createApi({
   reducerPath: 'analysisApi',
   baseQuery: baseQueryWithRetry,
-  tagTypes: ['Job', 'LLMProvider'],
+  tagTypes: ['Job', 'LLMProvider', 'UserLLMProvider'],
   endpoints: builder => ({
     // Submit a new analysis job
     submitJob: builder.mutation<JobSubmissionResponse, JobSubmissionRequest>({
@@ -289,6 +343,82 @@ export const analysisApi = createApi({
       }),
     }),
 
+    // User LLM Provider management endpoints
+    
+    // Get available provider types
+    getProviderTypes: builder.query<
+      { provider_types: ProviderType[] },
+      void
+    >({
+      query: () => '/user-llm-providers/types',
+    }),
+
+    // Get user LLM providers
+    getUserLLMProviders: builder.query<
+      { providers: UserLLMProvider[]; total: number; active_count: number },
+      { active_only?: boolean; provider_type?: string } | void
+    >({
+      query: (params) => ({
+        url: '/user-llm-providers',
+        params,
+      }),
+      providesTags: ['UserLLMProvider'],
+    }),
+
+    // Get single user LLM provider
+    getUserLLMProvider: builder.query<UserLLMProvider, string>({
+      query: (id) => `/user-llm-providers/${id}`,
+      providesTags: (result, error, id) => [{ type: 'UserLLMProvider', id }],
+    }),
+
+    // Create user LLM provider
+    createUserLLMProvider: builder.mutation<UserLLMProvider, UserLLMProviderCreate>({
+      query: (data) => {
+        console.log('DEBUG RTK: About to send data:', data);
+        console.log('DEBUG RTK: provider_type value:', data.provider_type, 'type:', typeof data.provider_type);
+        console.log('DEBUG RTK: JSON.stringify:', JSON.stringify(data));
+        return {
+          url: '/user-llm-providers',
+          method: 'POST',
+          body: data,
+        };
+      },
+      invalidatesTags: ['UserLLMProvider'],
+    }),
+
+    // Update user LLM provider
+    updateUserLLMProvider: builder.mutation<
+      UserLLMProvider, 
+      { id: string; data: UserLLMProviderUpdate }
+    >({
+      query: ({ id, data }) => ({
+        url: `/user-llm-providers/${id}`,
+        method: 'PUT',
+        body: data,
+      }),
+      invalidatesTags: (result, error, { id }) => [
+        { type: 'UserLLMProvider', id },
+        'UserLLMProvider',
+      ],
+    }),
+
+    // Delete user LLM provider
+    deleteUserLLMProvider: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `/user-llm-providers/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['UserLLMProvider'],
+    }),
+
+    // Test user LLM provider
+    testUserLLMProvider: builder.mutation<UserProviderTestResult, string>({
+      query: (id) => ({
+        url: `/user-llm-providers/${id}/test`,
+        method: 'POST',
+      }),
+    }),
+
     // Get system health status
     getSystemHealth: builder.query<
       {
@@ -332,6 +462,14 @@ export const {
   useGetLLMProvidersQuery,
   useTestLLMProviderMutation,
   useGetSystemHealthQuery,
+  // User LLM Provider hooks
+  useGetProviderTypesQuery,
+  useGetUserLLMProvidersQuery,
+  useGetUserLLMProviderQuery,
+  useCreateUserLLMProviderMutation,
+  useUpdateUserLLMProviderMutation,
+  useDeleteUserLLMProviderMutation,
+  useTestUserLLMProviderMutation,
 } = analysisApi;
 
 // Export the reducer to be included in store

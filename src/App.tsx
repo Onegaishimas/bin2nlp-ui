@@ -7,11 +7,15 @@ import { SystemHealthDashboard } from './components/health/SystemHealthDashboard
 import { ResultsViewer } from './components/results/ResultsViewer';
 import { Box, Typography, Alert, Card, CardContent } from '@mui/material';
 import { useGetSystemHealthQuery } from './services/api/analysisApi';
+import { useSelector, useDispatch } from 'react-redux';
+import { setSelectedJob } from './store/slices/analysisSlice';
+import { selectSelectedJobId } from './store/selectors/analysisSelectors';
 
 // Simple routing state for demo (in production you'd use React Router)
 const AppContent: React.FC = () => {
   const [currentPage, setCurrentPage] = React.useState('dashboard');
-  const [selectedJobId, setSelectedJobId] = React.useState<string | null>(null);
+  const dispatch = useDispatch();
+  const selectedJobId = useSelector(selectSelectedJobId);
 
   // Check system health
   const { data: healthData, error: healthError, isLoading } = useGetSystemHealthQuery();
@@ -29,7 +33,7 @@ const AppContent: React.FC = () => {
   };
 
   const handleViewResults = (jobId: string) => {
-    setSelectedJobId(jobId);
+    dispatch(setSelectedJob(jobId));
     setCurrentPage('results');
   };
 

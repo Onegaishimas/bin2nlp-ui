@@ -24,6 +24,7 @@ const initialState: AnalysisState = {
   jobHistory: [],
   ui: {
     currentView: 'submission',
+    selectedJobId: undefined,
     submissionPanelExpanded: true,
     trackingPanelExpanded: true,
     historyPanelExpanded: false,

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Box, Button, Typography, Alert, Snackbar, Paper } from '@mui/material';
 import { GridLegacy as Grid } from '@mui/material';
 import { Upload as UploadIcon } from '@mui/icons-material';
@@ -25,9 +25,9 @@ export const UploadPage: React.FC = () => {
     setSelectedFile(null);
   };
 
-  const handleConfigChange = (config: Partial<JobSubmissionRequest>) => {
+  const handleConfigChange = useCallback((config: Partial<JobSubmissionRequest>) => {
     setJobConfig(config);
-  };
+  }, []);
 
   const handleSubmitJob = async () => {
     if (!selectedFile) {
@@ -79,9 +79,10 @@ export const UploadPage: React.FC = () => {
   };
 
   const isConfigValid = () => {
-    // If LLM is enabled, require API key
-    if (jobConfig.llm_provider && !jobConfig.llm_api_key) {
-      return false;
+    // For user providers, API key is pre-configured, so just check if provider is selected
+    if (jobConfig.llm_provider) {
+      // User provider is selected and has pre-configured API key
+      return true;
     }
     return true;
   };
@@ -130,9 +131,9 @@ export const UploadPage: React.FC = () => {
               3. Start Analysis
             </Typography>
 
-            {!isConfigValid() && jobConfig.llm_provider && (
+            {!isConfigValid() && (
               <Alert severity='warning' sx={{ mb: 2 }}>
-                API key is required when LLM translation is enabled.
+                Please configure your analysis settings above.
               </Alert>
             )}
 

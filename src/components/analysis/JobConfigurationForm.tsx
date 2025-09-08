@@ -23,7 +23,7 @@ import {
   Security as SecurityIcon,
   Speed as SpeedIcon,
 } from '@mui/icons-material';
-import { useGetLLMProvidersQuery } from '../../services/api/analysisApi';
+import { useGetLLMProvidersQuery, useGetUserLLMProvidersQuery } from '../../services/api/analysisApi';
 import type { JobSubmissionRequest } from '../../services/api/analysisApi';
 
 interface JobConfigurationFormProps {
@@ -90,12 +90,24 @@ export const JobConfigurationForm: React.FC<JobConfigurationFormProps> = ({
   const [customEndpoint, setCustomEndpoint] = useState('');
   const [showAdvanced, setShowAdvanced] = useState(false);
 
-  // Fetch LLM providers
+  // Fetch user LLM providers
   const {
-    data: providersData,
-    isLoading: providersLoading,
-    error: providersError,
+    data: userProvidersData,
+    isLoading: userProvidersLoading,
+    error: userProvidersError,
+  } = useGetUserLLMProvidersQuery({});
+
+  // Also fetch system providers as fallback/reference
+  const {
+    data: systemProvidersData,
+    isLoading: systemProvidersLoading,
+    error: systemProvidersError,
   } = useGetLLMProvidersQuery();
+
+  // Use user providers primarily, with fallback to system if needed
+  const providersData = userProvidersData;
+  const providersLoading = userProvidersLoading;
+  const providersError = userProvidersError;
 
   // Auto-expand advanced options for Ollama
   useEffect(() => {
@@ -112,10 +124,9 @@ export const JobConfigurationForm: React.FC<JobConfigurationFormProps> = ({
     };
 
     if (useLLM && selectedProvider) {
-      config.llm_provider = selectedProvider;
-      if (selectedModel) config.llm_model = selectedModel;
-      if (apiKey) config.llm_api_key = apiKey;
-      if (customEndpoint) config.llm_endpoint_url = customEndpoint;
+      // For user providers, we send the user provider ID
+      config.llm_provider = selectedProvider; // This will be the user provider ID
+      // API key and other configs are handled by the user provider configuration
     }
 
     onConfigChange(config);
@@ -124,15 +135,12 @@ export const JobConfigurationForm: React.FC<JobConfigurationFormProps> = ({
     translationDetail,
     useLLM,
     selectedProvider,
-    selectedModel,
-    apiKey,
-    customEndpoint,
     onConfigChange,
   ]);
 
   const selectedDepthOption = ANALYSIS_DEPTH_OPTIONS.find(opt => opt.value === analysisDepth);
   const selectedProviderData = providersData?.providers.find(
-    p => p.provider_id === selectedProvider
+    p => p.id === selectedProvider
   );
 
   return (
@@ -236,28 +244,21 @@ export const JobConfigurationForm: React.FC<JobConfigurationFormProps> = ({
                   }}
                   disabled={disabled || providersLoading}
                 >
-                  {providersData?.providers.map(provider => (
-                    <MenuItem key={provider.provider_id} value={provider.provider_id}>
+                  {providersData?.providers?.filter(p => p.is_active)?.map(provider => (
+                    <MenuItem key={provider.id} value={provider.id}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
                         <Typography variant='body1'>{provider.name}</Typography>
                         <Box sx={{ ml: 'auto' }}>
                           <Chip
                             size='small'
-                            label={provider.status}
-                            color={provider.status === 'healthy' ? 'success' : 'error'}
+                            label={provider.provider_type}
+                            color='primary'
+                            variant='outlined'
                           />
                         </Box>
                       </Box>
                     </MenuItem>
                   ))}
-                  <MenuItem value='ollama'>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-                      <Typography variant='body1'>Ollama (Local)</Typography>
-                      <Box sx={{ ml: 'auto' }}>
-                        <Chip size='small' label='manual' color='info' />
-                      </Box>
-                    </Box>
-                  </MenuItem>
                 </Select>
               </FormControl>
 
@@ -267,121 +268,46 @@ export const JobConfigurationForm: React.FC<JobConfigurationFormProps> = ({
                 </Alert>
               )}
 
-              {/* Model Selection */}
-              {selectedProvider && selectedProvider !== 'ollama' && (
-                <FormControl fullWidth>
-                  <InputLabel>Model</InputLabel>
-                  <Select
-                    value={selectedModel}
-                    label='Model'
-                    onChange={e => setSelectedModel(e.target.value)}
-                    disabled={disabled}
-                  >
-                    {selectedProviderData?.available_models.map(model => (
-                      <MenuItem key={model} value={model}>
-                        <Typography variant='body1'>{model}</Typography>
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              )}
-
-              {/* Ollama Model Input */}
-              {selectedProvider === 'ollama' && (
-                <TextField
-                  fullWidth
-                  label='Ollama Model'
-                  value={selectedModel}
-                  onChange={e => setSelectedModel(e.target.value)}
-                  disabled={disabled}
-                  placeholder='e.g., llama2, codellama, mistral'
-                  helperText='Enter the name of your locally installed Ollama model'
-                />
-              )}
-
-              {/* API Key */}
-              <TextField
-                fullWidth
-                type='password'
-                label={selectedProvider === 'ollama' ? 'API Key (Optional)' : 'API Key'}
-                value={apiKey}
-                onChange={e => setApiKey(e.target.value)}
-                disabled={disabled}
-                placeholder={
-                  selectedProvider === 'ollama'
-                    ? 'Leave empty for local Ollama'
-                    : 'Enter your LLM provider API key'
-                }
-                helperText={
-                  selectedProvider === 'ollama'
-                    ? 'API key not required for local Ollama installations'
-                    : 'API key is stored only for this session and never persisted'
-                }
-              />
-
-              {/* Advanced Options */}
-              <Box>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={showAdvanced}
-                      onChange={e => setShowAdvanced(e.target.checked)}
-                      size='small'
-                    />
-                  }
-                  label='Advanced Options'
-                />
-
-                <Collapse in={showAdvanced}>
-                  <Box sx={{ mt: 2 }}>
-                    <TextField
-                      fullWidth
-                      label={
-                        selectedProvider === 'ollama' ? 'Ollama Server URL' : 'Custom Endpoint URL'
-                      }
-                      value={customEndpoint}
-                      onChange={e => setCustomEndpoint(e.target.value)}
-                      disabled={disabled}
-                      placeholder={
-                        selectedProvider === 'ollama'
-                          ? 'http://localhost:11434'
-                          : 'https://api.custom-llm.com/v1'
-                      }
-                      helperText={
-                        selectedProvider === 'ollama'
-                          ? 'URL of your Ollama server (default: http://localhost:11434)'
-                          : 'Override the default API endpoint (optional)'
-                      }
-                    />
-                  </Box>
-                </Collapse>
-              </Box>
-
-              {/* Cost Estimation */}
+              {/* Model Selection - For user providers, models are pre-configured */}
               {selectedProviderData && (
                 <Alert severity='info'>
                   <Typography variant='body2'>
-                    <strong>Estimated Cost:</strong> ~$
-                    {selectedProviderData.cost_per_1k_tokens.toFixed(4)} per 1K tokens
+                    <strong>Provider Type:</strong> {selectedProviderData.provider_type}
                     <br />
-                    <strong>Capabilities:</strong> {selectedProviderData.capabilities.join(', ')}
+                    <strong>Configuration:</strong> Models and settings are pre-configured for this provider
+                    {selectedProviderData.endpoint_url && (
+                      <>
+                        <br />
+                        <strong>Endpoint:</strong> {selectedProviderData.endpoint_url}
+                      </>
+                    )}
                   </Typography>
                 </Alert>
               )}
 
-              {/* Ollama Information */}
-              {selectedProvider === 'ollama' && (
-                <Alert severity='info'>
+              {/* API Key - For user providers, API keys are already configured */}
+              {selectedProviderData && (
+                <Alert severity='success'>
                   <Typography variant='body2'>
-                    <strong>Ollama Configuration:</strong> Local LLM provider with no usage costs
+                    <strong>✅ API Key Configured:</strong> This provider is ready to use with your pre-configured API key
                     <br />
-                    <strong>Requirements:</strong> Ensure Ollama is running and the model is
-                    installed locally
+                    <strong>Provider:</strong> {selectedProviderData.name} ({selectedProviderData.provider_type})
                     <br />
-                    <strong>Default URL:</strong> http://localhost:11434
+                    <strong>Status:</strong> {selectedProviderData.is_active ? 'Active' : 'Inactive'}
                   </Typography>
                 </Alert>
               )}
+
+              {!selectedProvider && (
+                <Alert severity='warning'>
+                  <Typography variant='body2'>
+                    <strong>No Provider Selected:</strong> Please select a user-configured provider above.
+                    <br />
+                    If you don't see any providers, <strong>add a provider</strong> in the LLM Providers section first.
+                  </Typography>
+                </Alert>
+              )}
+
             </Stack>
           </Collapse>
         </Stack>
