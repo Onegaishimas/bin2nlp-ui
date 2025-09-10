@@ -116,6 +116,11 @@ export const JobConfigurationForm: React.FC<JobConfigurationFormProps> = ({
     }
   }, [selectedProvider]);
 
+  const selectedDepthOption = ANALYSIS_DEPTH_OPTIONS.find(opt => opt.value === analysisDepth);
+  const selectedProviderData = providersData?.providers.find(
+    p => p.id === selectedProvider
+  );
+
   // Update parent component when config changes
   useEffect(() => {
     const config: Partial<JobSubmissionRequest> = {
@@ -127,6 +132,11 @@ export const JobConfigurationForm: React.FC<JobConfigurationFormProps> = ({
       // For user providers, we send the user provider ID
       config.llm_provider = selectedProvider; // This will be the user provider ID
       // API key and other configs are handled by the user provider configuration
+      
+      // Add model for Ollama providers
+      if (selectedProviderData?.provider_type === 'ollama' && selectedModel) {
+        config.llm_model = selectedModel;
+      }
     }
 
     onConfigChange(config);
@@ -135,13 +145,10 @@ export const JobConfigurationForm: React.FC<JobConfigurationFormProps> = ({
     translationDetail,
     useLLM,
     selectedProvider,
+    selectedModel,
+    selectedProviderData,
     onConfigChange,
   ]);
-
-  const selectedDepthOption = ANALYSIS_DEPTH_OPTIONS.find(opt => opt.value === analysisDepth);
-  const selectedProviderData = providersData?.providers.find(
-    p => p.id === selectedProvider
-  );
 
   return (
     <Card>
@@ -268,13 +275,26 @@ export const JobConfigurationForm: React.FC<JobConfigurationFormProps> = ({
                 </Alert>
               )}
 
-              {/* Model Selection - For user providers, models are pre-configured */}
+              {/* Model Selection - Show for Ollama providers */}
+              {selectedProviderData?.provider_type === 'ollama' && (
+                <FormControl fullWidth>
+                  <TextField
+                    label='Model Name'
+                    value={selectedModel}
+                    onChange={e => setSelectedModel(e.target.value)}
+                    placeholder='e.g., phi4, llama2, codellama'
+                    disabled={disabled}
+                    helperText='Specify the Ollama model to use (e.g., phi4)'
+                  />
+                </FormControl>
+              )}
+
               {selectedProviderData && (
                 <Alert severity='info'>
                   <Typography variant='body2'>
                     <strong>Provider Type:</strong> {selectedProviderData.provider_type}
                     <br />
-                    <strong>Configuration:</strong> Models and settings are pre-configured for this provider
+                    <strong>Configuration:</strong> {selectedProviderData.provider_type === 'ollama' ? 'Specify model name above' : 'Models and settings are pre-configured for this provider'}
                     {selectedProviderData.endpoint_url && (
                       <>
                         <br />
